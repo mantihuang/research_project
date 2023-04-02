@@ -1,11 +1,2 @@
-.Rproj
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-
+Secret.R
 /.quarto/
-.Rdata
-.httr-oauth
-.DS_Store
-*.Rproj
