@@ -3,53 +3,41 @@ title: "Research Proposal"
 author: "Manting Huang"
 
 execute:
-  echo : True
+  echo : false
   message: false
   warning: false
   
 bibliography: references.bib
 ---
 
-> **Abstract.**  
+> **Abstract.**  This research project investigates the effects of unanticipated government spending shocks on output, real exchange rate, and consumption, particularly in the context of the Australian economy. Utilizing quarterly data and the SVAR model, the study captures the dynamic relationships among the endogenous variables. The model estimates impulse response functions (IRFs) and forecast error variance decomposition (FEVDs) for each endogenous variable, allowing for the examination of the dynamic responses of variables and quantification of forecast error variances attributable to the shocks. 
 >
 > **Keywords.** Government spending shock, exchange rate,impulse responses
 
 Please note that the website https://www.rba.gov.au/statistics/tables/ may sometimes be unstable and unable to load. Therefore, you may encounter errors such as "Could not read HTML at https://www.rba.gov.au/statistics/tables/" when using read_rba() in R.
 
-keep original variable but why?, minisudar prior.
 
 # 1. The question objective, and motivation
 
 ## Objective
-The research project aims to model the effect of government spending shocks on trade balance, real exchange rate and consumption
+The research project aims to model the effect of government spending shocks on output, real exchange rate and consumption
 
 ## Research question 
-How does the unanticipated government spending shock influence trade balance, real exchange rate and consumption in the short run and in the long run?
+How does the unanticipated government spending shock influence output, real exchange rate and consumption in the short run and in the long run?
 
 ## Motivation
 Most economies have experienced significant shocks due to Covid Pandemic,resulting in a marked increase in government net debt-to-GDP ratios.  For instance,Australian's general government net debt-to-GDP ratio surged from 24.5\% in 2019 to 38.1 in 2021\%  by [@abs2021government], while the United States's ratio rose from 106.1\% to 121.1\% by [@fed2023federal]. 
 
 
-
-
-Extensive research has been conducted on the impact of government spending shocks on output, consumption, and other significant macroeconomic indicators. According to economic theory, positive shocks increase output and consumption. However, there has been limited focus on the external sector of the economy, including the real exchange rate, import and export sector. By using SVARs model to identify government spending shocks and examining their relationship with these variables, policymakers can improve the design and implementation of fiscal and monetary policies to respond to unexpected government spending shocks.
+There has been considerable research on the consequences of government spending shocks on output, consumption, and other crucial macroeconomic factors. Economic theory suggests that positive shocks result in increased output and consumption. However, there has been less emphasis on the economy's external sector, including real exchange rates, imports, and exports. By employing the SVARs model to identify government spending shocks and investigating their connection with these variables, policymakers can enhance the formulation and execution of fiscal and monetary policies in response to unanticipated government spending shocks.
 
 # 2. Data and their properties
 
-
-Propose data for the investigation of the problem at hand.
-Motivate your choice of the variable and its form/transformation.
-Download the data using the readrba or readabs packages.
-Transform the variables to the desired format and visualise them.
-Investigate its properties and argue on:
-why they are essential to answer your research question,
-how they inform or motivate your model equations.
-
 ## Data 
 
-I will use quarter data for estimation in this research because it would be more reasonable to assume that government spending could be able to respond within a given period. This research will primarily focus on the Australian economy to enable a detailed analysis of its response to government spending shocks, while acknowledging that the results may not necessarily apply to other countries due to their unique institutional features and economic characteristics. Future work could explore the extension of the model to other countries to provide a more comprehensive understanding of the cross-country variation in response to government spending shocks.
+For this study, quarterly data will be utilized for estimation purposes, as it is more reasonable to assume that government spending can respond within a given period. The primary focus of this research will be on the Australian economy, allowing for an in-depth analysis of its reaction to government spending shocks. It is important to note that the findings may not necessarily be applicable to other countries due to their distinct institutional features and economic attributes. Future research could extend the model to other nations in order to gain a broader understanding of cross-country variations in response to government spending shocks.
 
-First, I load the pacakge that can directly download the data from the Reserve Bank of Australia [@rba2023statistics].
+Initially, I will load the packages that enable direct data downloads from the Reserve Bank of Australia [@rba2023statistics] and the Federal Reserve Bank of St. Louis [@FRED].
 
 ```{r, echo=TRUE}
 library(readrba)
@@ -58,6 +46,9 @@ library(ggplot2)
 library(cowplot)
 library(dplyr)
 library(zoo)
+library(tidyverse)
+library(fredr)
+library(urca)
 ```
 
 
@@ -65,34 +56,44 @@ library(zoo)
 ## Variables
 
 ### Consumption
-The data on household final consumption expenditure, measured in $million, is recorded quarterly and adjusted for seasonal variations. However, the plot indicates that the data is not stationary. The mean value is changing over time. Macroeconomic variables have these properties. Thus, I turned to the consumption growth data instead. This data measures the year-ended household consumption growth, and shows a decrease in 2020 due to the COVID-19 pandemic. I conducted an adf test and found that the p-value was 0.01, indicating that the data is stationary. The mean value of the consumption growth is 3.41%, which suggests that the growth rate is fluctuating around this value. This growth rate is stationary over time. 
+The dataset contains information on household final consumption expenditure, which is measured in millions of dollars and recorded quarterly, with adjustments for seasonal variations. The plot, however, reveals that the data is non-stationary, with the mean value changing over time. This is a common characteristic of macroeconomic variables. As a result, I also look at the consumption growth data instead, which measures the year-ended household consumption growth and displays a decline in 2020 due to the COVID-19 pandemic. The mean value of consumption growth is 3.41%, indicating that the growth rate fluctuates around this value and is stationary over time.
 
-The original variable consumption is log - transformed in my model to reduce the scale and match the assumption of normality. 
+In the model, the original consumption variable is log-transformed to reduce the scale and conform to the assumption of normality.
+
+
+
 ```{r}
 consumption <- read_rba('H2')
 consumption$Date <- as.Date(consumption$date, format = "%Y-%m-%d")
 
 # Household final consumption expenditure measured in $million
-consumption2 <- subset(consumption, series_id == "GGDPECCVPSH") 
-consumption3 <- subset(consumption,series_id == "GGDPECCVPSHY")
-consumption4 <- merge(consumption2, consumption3, by = "date", all = FALSE)
-adf.test(consumption3$value)
 
-# log transform of the level
+consumption2 <- consumption %>%
+  filter(series_id == "GGDPECCVPSH") %>%
+  rename(consumption = value)
 
-consumption2$log_con = log(consumption2$value)
-# Create a line plot of 
+df <- consumption2 %>% select(Date,consumption)
+# Consumption growth
+consumption3 <- consumption %>%
+  filter(series_id == "GGDPECCVPSHY") %>%
+  rename(consumption_growth = value) %>% select(Date,consumption_growth)
 
-plot4<- ggplot(data = consumption2, aes(x = Date, y =log_con)) +
-  geom_line(color = "steelblue", size = 1) +
+df <- merge(df,consumption3,by="Date")
+
+df$log_con = log(df$consumption)
+
+
+# Plot the data
+plot1<- ggplot(data = df, aes(x = Date, y =log_con)) +
+  geom_line(color = "steelblue", size = 0.8) +
   labs(title = " Household Consumption (log)", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
-plot5<- ggplot(data = consumption3, aes(x = Date, y =value)) +
-  geom_line(color = "steelblue", size = 1) +
+plot2<- ggplot(data = df, aes(x = Date, y =consumption_growth)) +
+  geom_line(color = "steelblue", size = 0.8) +
   labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
@@ -100,141 +101,120 @@ plot5<- ggplot(data = consumption3, aes(x = Date, y =value)) +
         axis.text = element_text(size = 12),
         legend.position = "none")
 
-consumption_plot <- plot_grid(plot4, plot5,  ncol = 1, align = "v")
+consumption_plot <- plot_grid(plot1, plot2,  ncol = 1, align = "v")
 print(consumption_plot)
 
 ```
 ### GDP
 
- the real GDP was measured in million dollars, and the plot of this data indicates that it is non-stationary due to its increasing trend. In order to address this, I transformed the original variable using the lag() function in R, resulting in the GDP percentage change.
+The real GDP is measured in million dollars, and the plot of this data suggests that it is non-stationary due to its increasing trend. To address this, I transformed the original variable using the lag() function in R, resulting in the GDP percentage change.
 
-Upon examining the plot of the GDP percentage change, it appears to be more stationary over time, indicating that this transformed variable may be more suitable for use in the model.It fluctuates a lot during covid period. Therefore, I will proceed with using the GDP percentage change as the variable for the model instead of the original real GDP in million dollars.
+When examining the plot of the GDP percentage change, it appears to be more stationary over time. However, the data fluctuates significantly during the COVID period. In a later section, I also run ACF and PACF tests, which suggest that I should keep the original variable.
 ```{r}
+# GDP
 GDP <- read_rba('H1')
-
-
 GDP$Date <- as.Date(GDP$date, format = "%Y-%m-%d")
 # Real GDP
-GDP2 <- subset(GDP, series_id == "GGDPCVGDP")
 
-library(dplyr)
-GDP2 <- GDP2 %>%
-  mutate(percentage_change = (value - lag(value)) / lag(value) * 100)
+GDP2 <- GDP %>%
+  filter(series_id == "GGDPCVGDP") %>%
+  rename(GDP = value) %>%
+  select(Date,GDP)
 
-# log transform of GDP
-GDP2$log_gdp = log(GDP2$value)
-# Create a line plot of 
+df <- merge(df,GDP2, by="Date")
 
-plot3<- ggplot(data = GDP2, aes(x = Date, y =percentage_change)) +
-  geom_line(color = "steelblue", size = 1) +
-  labs(title = " GDP percentage_change", x = "Year", y = "Index") +
+df$log_gdp = log(df$GDP)
+
+# First difference for gdp
+df <- df %>% mutate(GDP_percentage = (GDP-lag(GDP))/lag(GDP)*100)
+
+plot2<- ggplot(data = df, aes(x = Date, y =log_gdp)) +
+  geom_line(color = "steelblue", size = 0.8) +
+  labs(title = " GDP (log)", x = "Year", y = "Index") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
+        axis.title = element_text(size = 14, face = "bold"),
+        axis.text = element_text(size = 12),
+        legend.position = "none")
+plot3<- ggplot(data = df, aes(x = Date, y =GDP_percentage)) +
+  geom_line(color = "steelblue", size = 0.8) +
+  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
 
-gdp_plot<- ggplot(data = GDP2, aes(x = Date, y =log_gdp) )+
-  geom_line(color = "steelblue", size = 1) +
-  labs(title = " GDP(log) ", x = "Year", y = "Index") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
-        axis.title = element_text(size = 14, face = "bold"),
-        axis.text = element_text(size = 12),
-        legend.position = "none")
-
-combined_gdp <- plot_grid( gdp_plot,plot3, ncol = 1, align = "v")
-print(combined_gdp)
+consumption_plot <- plot_grid(plot2, plot3,  ncol = 1, align = "v")
+print(consumption_plot)
 
 ```
 ### Exchange rate
 
-The real exchange rate data is obtained from the Reserve Bank of Australia (RBA) and is provided on a quarterly basis. RBA uses Australian dolloar trade-weighted index as a measure of real exchange rate. It is the price of the Australian dollar interms of a group of foeign currencies based on the share of trade with Australia. 
-```{r ,echo = TRUE}
+The real exchange rate data is sourced from the Reserve Bank of Australia (RBA) and is provided on a quarterly basis. RBA uses the Australian dollar trade-weighted index as a measure of the real exchange rate. This index represents the price of the Australian dollar in terms of a group of foreign currencies, based on their share of trade with Australia.
+```{r }
 
 
 # TWI 
+
 real_exchange_rate <- read_rba("F15")
 real_exchange_rate$Date <- as.Date(real_exchange_rate$date, format = "%Y-%m-%d")
-real_exchange_rate_twi <- subset(real_exchange_rate, series_id == "FRERTWI")
-```
+
+real_exchange_rate_twi <-   real_exchange_rate %>%
+  filter(series_id == "FRERTWI") %>%
+  rename(TWI = value) %>%
+  select(Date,TWI)
+  
+df <- merge(df,real_exchange_rate_twi, by='Date')
 
 
-```{r, echo=FALSE}
-# Create a line plot of real_exchange_rate_twi
-plot1<- ggplot(data = real_exchange_rate_twi, aes(x = Date, y = value)) +
-  geom_line(color = "steelblue", size = 1) +
-  labs(title = "Real Exchange Rate (Trade-Weighted Index) over Time", x = "Year", y = "Index") +
+plot5<- ggplot(data = df, aes(x = Date, y =TWI)) +
+  geom_line(color = "steelblue", size = 0.8) +
+  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
-print(plot1)
+
+print(plot5)
 ```
 
 
-```{r, echo=TRUE}
-
-adf.test(real_exchange_rate_twi$value)
-```
 
 
-Moreover, I also examine the nominal exchange rate variable. I download the AUD/USD exchange rate, as the US dollar is widely accepted as an international currency. I transform the daily data into quarterly data with mean. The figure displaying this data is shown below. (Note: The data obtained using the package may not exactly match the description on the website.) However, since the nominal interest rate may be influenced by various factors and also due to data availability, this research will focus solely on the real interest rate(TWI). 
 
 
-```{r}
-
-# Exchange rate US/AUD not sure if I will use it in the model
- exchange_rate <- read_rba(table_no = 'F11.1')
-# 
-exchange_rate$Date <- as.Date(exchange_rate$date, format = "%Y-%m-%d")
-
-# Calculate quarterly averages
-exchange_rate_quarterly <- exchange_rate %>%
- mutate(Quarter = as.yearqtr(Date)) %>%
- group_by(Quarter) %>%
- summarize(ExchangeRate = mean(value, na.rm = TRUE))
+Additionally, I also investigate the nominal exchange rate variable. I download the AUD/USD exchange rate, as the US dollar is widely accepted as an international currency. (Note: The data obtained using the package may not exactly match the description on the website.) However, since the nominal exchange rate may be influenced by various factors and due to data availability constraints, this research will focus exclusively on the real interest rate (TWI).
 
 
-# Plot the quarterly data
-
-plot_exchange = ggplot(exchange_rate_quarterly, aes(x = Quarter, y = ExchangeRate)) +
-  geom_line(color = "blue") +
-  labs(x = "Date", y = "Exchange Rate", title = "Quarterly Exchange Rate (AUD/USD)") +
-  theme_minimal() +
-  scale_y_continuous(labels = scales::comma)
-
-
-combined_plot <- plot_grid( plot1, plot_exchange, ncol = 1, align = "v")
-
-# Print the combined plot
-print(combined_plot)
-
-```
 
 ### Trade balance
 
-The trade balance data is measured as a percentage of output and is recorded on a quarterly basis with seasonal adjustments. Upon examining the plot of this data, it appears to have been stationary prior to the COVID period. However, since then, the trade balance has been increasing. I will also have this variable in my model as a control variable. 
+The trade balance data is measured as a percentage of output and is recorded on a quarterly basis with seasonal adjustments. Upon examining the plot of this data, it appears to have been stationary before the COVID period. However, since then, the trade balance has been increasing. I will also include this variable in my model as a control variable.
 
 
-
-```{r, message=FALSE}
+```{r}
 Trade_balance <- read_rba("I1")
 
 Trade_balance$Date <- as.Date(Trade_balance$date, format = "%Y-%m-%d")
-Trade_balance2 <- subset(Trade_balance, series_id == "HTBGSCPGDP")
 
-# Create a line plot of real_exchange_rate_twi
-plot2<- ggplot(data = Trade_balance2, aes(x = Date, y = value)) +
-  geom_line(color = "steelblue", size = 1) +
-  labs(title = " Trade balance as a per cent of output", x = "Year", y = "Index") +
+Trade_balance2 <- Trade_balance   %>%
+filter(series_id == "HTBGSCPGDP") %>%
+  rename(Trade_balance = value) %>%
+  select(Date,Trade_balance)
+df <- merge(df,Trade_balance2,by = "Date")
+
+plot6<- ggplot(data = df, aes(x = Date, y =Trade_balance)) +
+  geom_line(color = "steelblue", size = 0.8) +
+  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
-print(plot2)
+
+print(plot6)
 
 ```
 
@@ -242,14 +222,8 @@ print(plot2)
 
 
 ### government spending data
-Due to package contraints, readrba or readabs are not applicable for government spending data because the data published about public sector is yearly based on ABS. I use fred as my data source instead. Government spending is increasing due to the increasing trend, thus I use function lag() to transform this data. Both the figure and the ADF test indicates it is stationary. I will also include this variable in my model. 
+Due to package constraints, readrba or readabs are not applicable for government spending data, as the data published about the public sector by ABS is yearly. Instead, I use FRED as my data source. Government spending is increasing due to the upward trend, so I use the lag() function to transform this data.  I will keep the lof transformation of the original variable.
 ```{r}
-
-
-
-# Load the library
-library(fredr)
-
 # Set your FRED API key
 
 readRenviron("secret.R")
@@ -257,71 +231,151 @@ api_key <-Sys.getenv("MY_FRED_API_KEY")
 fredr_set_key(api_key)
 
 # Download the Australian government spending data (quarterly data, seasonally adjusted)
-gov_spending_australia <- fredr(series_id = "AUSGFCEQDSMEI",observation_start = as.Date("1990-01-01"))
+gov_spending_australia <- fredr(series_id = "AUSGFCEQDSMEI",observation_start = as.Date("1970-01-01"))
+
+#  Real General Government Final Consumption Expenditure for Australia 
+gov_spending_australia <- fredr(series_id = "NCGGRSAXDCAUQ",observation_start = as.Date("1970-01-01"))
+
+
 gov_spending_australia$log_gov = log(gov_spending_australia$value)
 
 gov_spending_australia <- gov_spending_australia %>%
-  mutate(percentage_change = (value - lag(value)) / lag(value) * 100)
+  mutate(percentage_change = (value - lag(value)) / lag(value) * 100) %>% 
+select(date,value,percentage_change,log_gov) %>%
+  rename(Date = date)
 
-# Calculate real government spending
-
-
-
-
-# Check the data
-
-plot_log <- ggplot(gov_spending_australia, aes(x = date, y = log_gov)) +
-  geom_line() +
-  labs(title = "Australian Government Spending(log)",
-       x = "Date",
-       y = "Value") +
-geom_line(color = "steelblue", size = 1) +
-  labs(title = " Australian Government Spending", x = "Year", y = "Index") +
+plot7<- ggplot(data = gov_spending_australia, aes(x = Date, y =log_gov)) +
+  geom_line(color = "steelblue", size = 0.8) +
+  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
 
-plot_gd<-  ggplot(gov_spending_australia, aes(x = date, y = percentage_change )) +
-  geom_line() +
-  labs(title = "Australian Government Spending Percentage change",
-       x = "Date",
-       y = "Value") +
-geom_line(color = "steelblue", size = 1) +
-  labs(title = " Trade balance as a per cent of output", x = "Year", y = "Index") +
+plot8<- ggplot(data = gov_spending_australia, aes(x = Date, y =percentage_change)) +
+  geom_line(color = "steelblue", size = 0.8) +
+  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
+gov_plot <- plot_grid(plot7, plot8,  ncol = 1, align = "v")
+print(gov_plot)
 
-gd = plot_grid( plot_log,plot_gd ,ncol = 1, align = "v")
-print(gd)
-adf.test(na.omit(gov_spending_australia$percentage_change))
+```
+I also run the ADF test for this variable, and with a p-value of 0.5, we cannot reject the null hypothesis, indicating that the government spending data is expected to be non-stationary. For completeness, I also plot the ACF (autocorrelation function) and PACF (partial autocorrelation function). As shown in the ACF, there is a slow and gradual decay, suggesting that an autoregressive process might be suitable for the data. The PACF results also support using an AR model because the plot has a shorp cuf-off.
+```{r}
+adf.test(gov_spending_australia$log_gov)
+test1 = acf(gov_spending_australia$log_gov)
+test2 = pacf(gov_spending_australia$log_gov)
 ```
 
-# 3. The model and hypothesis
+## preliminary Data Analysis
+
+In this section, I will present a table of the ADF test results for the remaining variables for completeness. As stated in the previous section, I will retain the log transformation of the original variable in my research. Additionally, the PACF and ACF tests suggest using an autoregression model.
+### ADF test
+ 
+
+```{r}
+
+## Preliminary test
 
 
 
-State the model equations including the assumptions regarding the model's error terms.
-Explain every single notation you introduce to state the model.
-Explain how you will use the model to answer your research question and how it addresses your objectives.
-Explain what estimation output you will interpret to answer your research question. Bring about the relevant economic context.
 
-## Impusle response function 
-What irf I am interested. what type of output
 
-## Variance Decomposition
+# Assuming your dataset is called 'data'
+data_without_date <- df[,-1] # Remove date column if it exists
+
+
+# Perform the ADF test on each variable and extract the test statistic and p-value
+adf_summary <- map_df(data_without_date, function(x) {
+  adf_test <- ur.df(x, type = "none", lags = 1)
+  adf_test_summary <- summary(adf_test)
+  tibble(
+    Test_statistic = adf_test_summary@teststat[1, 1],
+    Critical_value= adf_test_summary@cval[1, 1]
+  )
+}, .id = "Variable")
+
+# Add variable names to the summary table
+adf_summary$Variable <- colnames(data_without_date)
+
+# Display the ADF test summary table
+adf_summary
+
+```
+
+As anticipated, macroeconomic data is typically non-stationary. The only exception in this case is the real exchange rate, which is stationary.
+
+### PACF and ACF test
+
+```{r}
+# Define the number of rows and columns for the combined plot
+nrow <- 3
+ncol <- 3
+
+# Set up the combined plot grid
+par(mfrow = c(nrow, ncol))
+
+# Run the ACF and PACF functions for each variable and display the plots
+for (i in seq_along(data_without_date)) {
+  variable_name <- colnames(data_without_date)[i]
+  
+  # ACF plot
+  acf(data_without_date[[i]], main = paste("ACF of", variable_name))
+}
+
+# Reset the graphical parameters to default
+par(mfrow = c(nrow, ncol))
+
+# PACF plot
+for (i in seq_along(data_without_date)) {
+  variable_name <- colnames(data_without_date)[i]
+  
+  # PACF plot
+  pacf(data_without_date[[i]], main = paste("PACF of", variable_name))
+}
+
+```
+
+# 3. The model 
+
+
+
 
 ## Model Specification 
 Using same notations in lecture, the model is specified as follows:
-$$B_0 y_t = b_0 + B_1 y_{t-1}+ ... + B_p y_{t-p}+\varepsilon_t$$
+$$B_0 y_t = b_0 + B_1 y_{t-1}+ ... + B_p y_{t-p}+u_t$$
+Then the empirical model for this study is a structural vector autoregression of the reduced form representation
+
+$$  \begin{bmatrix} \hat{g_t} \\   \hat{c_t} \\ \hat{y_t} \\ \hat{e}_t \end{bmatrix} = A(L) \begin{bmatrix} \hat{g}_{t-1} \\   \hat{c}_{t-1} \\ \hat{y}_{t-1} \\ \hat{e}_{t-1} \end{bmatrix} + \varepsilon_t $$
+Where:
+
+$g_t$ denotes real government spending,
+
+$c_t$ denotes household final consumption,
+
+$y_t$ denotes real GDP,
+
+$e_t$ denotes the real exchange rate (trade-weighted index),
+
+$A(L)$ is an nxn matrix polynomial in the lag operator L, representing the dynamic relationships among the endogenous variables,
+
+$\varepsilon_t$ is a vector of the structural shocks at time t: $\varepsilon_t = [\varepsilon_{g_t}, \varepsilon_{c_t}, \varepsilon_{y_t}, \varepsilon_{e_t}]^T$.
+
+Assumptions regarding the model's error terms:
+$\varepsilon_t |Y_{t-1}  \sim iid(0_N, Σ)$
+
+## Impusle response function and Forecast error variance decomposition
+
+The research project aims to model the effect of government spending shocks on output, real exchange rate, and consumption. The SVAR model specified above captures the dynamic relationships among the endogenous variables. To answer the research questions, I will use the SVAR model to estimate the impulse response functions (IRFs) and forecast error variance decomposition (FEVDs) for each endogenous variable. With IRFs, I will be able to observe the dynamic response of each variable, while the FEVDs will quantify the portions of the forecast error variance of each variable attributable to the shocks this paper aims to identify.
 
 
-
-
+## Relevant economic context
+I would expect the IRF for government spending to initially increase in response to the government spending shock and then decrease to the steady state. Consumption and GDP will also increase, but on a smaller scale compared to government spending. I am uncertain about the real exchange rate. Data shows that the real exchange rate will increase upon the shock and continue to rise after the shock.
 
 
 

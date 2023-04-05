@@ -55,7 +55,26 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -143,12 +162,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#trade-balance" id="toc-trade-balance" class="nav-link" data-scroll-target="#trade-balance">Trade balance</a></li>
   <li><a href="#government-spending-data" id="toc-government-spending-data" class="nav-link" data-scroll-target="#government-spending-data">government spending data</a></li>
   </ul></li>
-  </ul></li>
-  <li><a href="#the-model-and-hypothesis" id="toc-the-model-and-hypothesis" class="nav-link" data-scroll-target="#the-model-and-hypothesis">3. The model and hypothesis</a>
+  <li><a href="#preliminary-data-analysis" id="toc-preliminary-data-analysis" class="nav-link" data-scroll-target="#preliminary-data-analysis">preliminary Data Analysis</a>
   <ul class="collapse">
-  <li><a href="#impusle-response-function" id="toc-impusle-response-function" class="nav-link" data-scroll-target="#impusle-response-function">Impusle response function</a></li>
-  <li><a href="#variance-decomposition" id="toc-variance-decomposition" class="nav-link" data-scroll-target="#variance-decomposition">Variance Decomposition</a></li>
+  <li><a href="#pacf-and-acf-test" id="toc-pacf-and-acf-test" class="nav-link" data-scroll-target="#pacf-and-acf-test">PACF and ACF test</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#the-model" id="toc-the-model" class="nav-link" data-scroll-target="#the-model">3. The model</a>
+  <ul class="collapse">
   <li><a href="#model-specification" id="toc-model-specification" class="nav-link" data-scroll-target="#model-specification">Model Specification</a></li>
+  <li><a href="#impusle-response-function-and-forecast-error-variance-decomposition" id="toc-impusle-response-function-and-forecast-error-variance-decomposition" class="nav-link" data-scroll-target="#impusle-response-function-and-forecast-error-variance-decomposition">Impusle response function and Forecast error variance decomposition</a></li>
+  <li><a href="#relevant-economic-context" id="toc-relevant-economic-context" class="nav-link" data-scroll-target="#relevant-economic-context">Relevant economic context</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul></li>
   </ul>
@@ -181,90 +204,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 <blockquote class="blockquote">
-<p><strong>Abstract.</strong></p>
+<p><strong>Abstract.</strong> This research project investigates the effects of unanticipated government spending shocks on output, real exchange rate, and consumption, particularly in the context of the Australian economy. Utilizing quarterly data and the SVAR model, the study captures the dynamic relationships among the endogenous variables. The model estimates impulse response functions (IRFs) and forecast error variance decomposition (FEVDs) for each endogenous variable, allowing for the examination of the dynamic responses of variables and quantification of forecast error variances attributable to the shocks.</p>
 <p><strong>Keywords.</strong> Government spending shock, exchange rate,impulse responses</p>
 </blockquote>
 <p>Please note that the website https://www.rba.gov.au/statistics/tables/ may sometimes be unstable and unable to load. Therefore, you may encounter errors such as “Could not read HTML at https://www.rba.gov.au/statistics/tables/” when using read_rba() in R.</p>
-<p>keep original variable but why?, minisudar prior.</p>
 <section id="the-question-objective-and-motivation" class="level1">
 <h1>1. The question objective, and motivation</h1>
 <section id="objective" class="level2">
 <h2 class="anchored" data-anchor-id="objective">Objective</h2>
-<p>The research project aims to model the effect of government spending shocks on trade balance, real exchange rate and consumption</p>
+<p>The research project aims to model the effect of government spending shocks on output, real exchange rate and consumption</p>
 </section>
 <section id="research-question" class="level2">
 <h2 class="anchored" data-anchor-id="research-question">Research question</h2>
-<p>How does the unanticipated government spending shock influence trade balance, real exchange rate and consumption in the short run and in the long run?</p>
+<p>How does the unanticipated government spending shock influence output, real exchange rate and consumption in the short run and in the long run?</p>
 </section>
 <section id="motivation" class="level2">
 <h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
-<p>Most economies have experienced significant shocks due to Covid Pandemic,resulting in a marked increase in government net debt-to-GDP ratios. For instance,Australian’s general government net debt-to-GDP ratio surged from 24.5% in 2019 to 38.1 in 2021% by <span class="citation" data-cites="abs2021government">(<a href="#ref-abs2021government" role="doc-biblioref"><strong>abs2021government?</strong></a>)</span>, while the United States’s ratio rose from 106.1% to 121.1% by <span class="citation" data-cites="fed2023federal">(<a href="#ref-fed2023federal" role="doc-biblioref"><strong>fed2023federal?</strong></a>)</span>.</p>
-<p>Extensive research has been conducted on the impact of government spending shocks on output, consumption, and other significant macroeconomic indicators. According to economic theory, positive shocks increase output and consumption. However, there has been limited focus on the external sector of the economy, including the real exchange rate, import and export sector. By using SVARs model to identify government spending shocks and examining their relationship with these variables, policymakers can improve the design and implementation of fiscal and monetary policies to respond to unexpected government spending shocks.</p>
+<p>Most economies have experienced significant shocks due to Covid Pandemic,resulting in a marked increase in government net debt-to-GDP ratios. For instance,Australian’s general government net debt-to-GDP ratio surged from 24.5% in 2019 to 38.1 in 2021% by <span class="citation" data-cites="abs2021government">(<a href="#ref-abs2021government" role="doc-biblioref">Statistics 2021</a>)</span>, while the United States’s ratio rose from 106.1% to 121.1% by <span class="citation" data-cites="fed2023federal">(<a href="#ref-fed2023federal" role="doc-biblioref">U.S. Office of Management and Budget and Federal Reserve Bank of St. Louis 2023.</a>)</span>.</p>
+<p>There has been considerable research on the consequences of government spending shocks on output, consumption, and other crucial macroeconomic factors. Economic theory suggests that positive shocks result in increased output and consumption. However, there has been less emphasis on the economy’s external sector, including real exchange rates, imports, and exports. By employing the SVARs model to identify government spending shocks and investigating their connection with these variables, policymakers can enhance the formulation and execution of fiscal and monetary policies in response to unanticipated government spending shocks.</p>
 </section>
 </section>
 <section id="data-and-their-properties" class="level1">
 <h1>2. Data and their properties</h1>
-<p>Propose data for the investigation of the problem at hand. Motivate your choice of the variable and its form/transformation. Download the data using the readrba or readabs packages. Transform the variables to the desired format and visualise them. Investigate its properties and argue on: why they are essential to answer your research question, how they inform or motivate your model equations.</p>
 <section id="data" class="level2">
 <h2 class="anchored" data-anchor-id="data">Data</h2>
-<p>I will use quarter data for estimation in this research because it would be more reasonable to assume that government spending could be able to respond within a given period. This research will primarily focus on the Australian economy to enable a detailed analysis of its response to government spending shocks, while acknowledging that the results may not necessarily apply to other countries due to their unique institutional features and economic characteristics. Future work could explore the extension of the model to other countries to provide a more comprehensive understanding of the cross-country variation in response to government spending shocks.</p>
-<p>First, I load the pacakge that can directly download the data from the Reserve Bank of Australia <span class="citation" data-cites="rba2023statistics">(<a href="#ref-rba2023statistics" role="doc-biblioref"><strong>rba2023statistics?</strong></a>)</span>.</p>
+<p>For this study, quarterly data will be utilized for estimation purposes, as it is more reasonable to assume that government spending can respond within a given period. The primary focus of this research will be on the Australian economy, allowing for an in-depth analysis of its reaction to government spending shocks. It is important to note that the findings may not necessarily be applicable to other countries due to their distinct institutional features and economic attributes. Future research could extend the model to other nations in order to gain a broader understanding of cross-country variations in response to government spending shocks.</p>
+<p>Initially, I will load the packages that enable direct data downloads from the Reserve Bank of Australia <span class="citation" data-cites="rba2023statistics">(<a href="#ref-rba2023statistics" role="doc-biblioref">Australia 2023</a>)</span> and the Federal Reserve Bank of St.&nbsp;Louis <span class="citation" data-cites="FRED">(<a href="#ref-FRED" role="doc-biblioref">St. Louis Accessed: 5 April 2023</a>)</span>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readrba)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tseries)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cowplot)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(zoo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(zoo)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fredr)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(urca)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="variables" class="level2">
 <h2 class="anchored" data-anchor-id="variables">Variables</h2>
 <section id="consumption" class="level3">
 <h3 class="anchored" data-anchor-id="consumption">Consumption</h3>
-<p>The data on household final consumption expenditure, measured in $million, is recorded quarterly and adjusted for seasonal variations. However, the plot indicates that the data is not stationary. The mean value is changing over time. Macroeconomic variables have these properties. Thus, I turned to the consumption growth data instead. This data measures the year-ended household consumption growth, and shows a decrease in 2020 due to the COVID-19 pandemic. I conducted an adf test and found that the p-value was 0.01, indicating that the data is stationary. The mean value of the consumption growth is 3.41%, which suggests that the growth rate is fluctuating around this value. This growth rate is stationary over time.</p>
-<p>The original variable consumption is log - transformed in my model to reduce the scale and match the assumption of normality.</p>
+<p>The dataset contains information on household final consumption expenditure, which is measured in millions of dollars and recorded quarterly, with adjustments for seasonal variations. The plot, however, reveals that the data is non-stationary, with the mean value changing over time. This is a common characteristic of macroeconomic variables. As a result, I also look at the consumption growth data instead, which measures the year-ended household consumption growth and displays a decline in 2020 due to the COVID-19 pandemic. The mean value of consumption growth is 3.41%, indicating that the growth rate fluctuates around this value and is stationary over time.</p>
+<p>In the model, the original consumption variable is log-transformed to reduce the scale and conform to the assumption of normality.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>consumption <span class="ot">&lt;-</span> <span class="fu">read_rba</span>(<span class="st">'H2'</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>consumption<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(consumption<span class="sc">$</span>date, <span class="at">format =</span> <span class="st">"%Y-%m-%d"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Household final consumption expenditure measured in $million</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>consumption2 <span class="ot">&lt;-</span> <span class="fu">subset</span>(consumption, series_id <span class="sc">==</span> <span class="st">"GGDPECCVPSH"</span>) </span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>consumption3 <span class="ot">&lt;-</span> <span class="fu">subset</span>(consumption,series_id <span class="sc">==</span> <span class="st">"GGDPECCVPSHY"</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>consumption4 <span class="ot">&lt;-</span> <span class="fu">merge</span>(consumption2, consumption3, <span class="at">by =</span> <span class="st">"date"</span>, <span class="at">all =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">adf.test</span>(consumption3<span class="sc">$</span>value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-    Augmented Dickey-Fuller Test
-
-data:  consumption3$value
-Dickey-Fuller = -6.4592, Lag order = 6, p-value = 0.01
-alternative hypothesis: stationary</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># log transform of the level</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>consumption2<span class="sc">$</span>log_con <span class="ot">=</span> <span class="fu">log</span>(consumption2<span class="sc">$</span>value)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a line plot of </span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>plot4<span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> consumption2, <span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span>log_con)) <span class="sc">+</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">" Household Consumption (log)"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Index"</span>) <span class="sc">+</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>plot5<span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> consumption3, <span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span>value)) <span class="sc">+</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">" Household Consumption Growth"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Index"</span>) <span class="sc">+</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>consumption_plot <span class="ot">&lt;-</span> <span class="fu">plot_grid</span>(plot4, plot5,  <span class="at">ncol =</span> <span class="dv">1</span>, <span class="at">align =</span> <span class="st">"v"</span>)</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(consumption_plot)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-2-1.png" class="quarto-discovered-preview-image img-fluid" width="672"></p>
 </div>
@@ -272,44 +256,9 @@ alternative hypothesis: stationary</code></pre>
 </section>
 <section id="gdp" class="level3">
 <h3 class="anchored" data-anchor-id="gdp">GDP</h3>
-<p>the real GDP was measured in million dollars, and the plot of this data indicates that it is non-stationary due to its increasing trend. In order to address this, I transformed the original variable using the lag() function in R, resulting in the GDP percentage change.</p>
-<p>Upon examining the plot of the GDP percentage change, it appears to be more stationary over time, indicating that this transformed variable may be more suitable for use in the model.It fluctuates a lot during covid period. Therefore, I will proceed with using the GDP percentage change as the variable for the model instead of the original real GDP in million dollars.</p>
+<p>The real GDP is measured in million dollars, and the plot of this data suggests that it is non-stationary due to its increasing trend. To address this, I transformed the original variable using the lag() function in R, resulting in the GDP percentage change.</p>
+<p>When examining the plot of the GDP percentage change, it appears to be more stationary over time. However, the data fluctuates significantly during the COVID period. In a later section, I also run ACF and PACF tests, which suggest that I should keep the original variable.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>GDP <span class="ot">&lt;-</span> <span class="fu">read_rba</span>(<span class="st">'H1'</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>GDP<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(GDP<span class="sc">$</span>date, <span class="at">format =</span> <span class="st">"%Y-%m-%d"</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Real GDP</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>GDP2 <span class="ot">&lt;-</span> <span class="fu">subset</span>(GDP, series_id <span class="sc">==</span> <span class="st">"GGDPCVGDP"</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>GDP2 <span class="ot">&lt;-</span> GDP2 <span class="sc">%&gt;%</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percentage_change =</span> (value <span class="sc">-</span> <span class="fu">lag</span>(value)) <span class="sc">/</span> <span class="fu">lag</span>(value) <span class="sc">*</span> <span class="dv">100</span>)</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># log transform of GDP</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>GDP2<span class="sc">$</span>log_gdp <span class="ot">=</span> <span class="fu">log</span>(GDP2<span class="sc">$</span>value)</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a line plot of </span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>plot3<span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> GDP2, <span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span>percentage_change)) <span class="sc">+</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">" GDP percentage_change"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Index"</span>) <span class="sc">+</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>gdp_plot<span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> GDP2, <span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span>log_gdp) )<span class="sc">+</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">" GDP(log) "</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Index"</span>) <span class="sc">+</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>combined_gdp <span class="ot">&lt;-</span> <span class="fu">plot_grid</span>( gdp_plot,plot3, <span class="at">ncol =</span> <span class="dv">1</span>, <span class="at">align =</span> <span class="st">"v"</span>)</span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(combined_gdp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
 </div>
@@ -317,178 +266,126 @@ alternative hypothesis: stationary</code></pre>
 </section>
 <section id="exchange-rate" class="level3">
 <h3 class="anchored" data-anchor-id="exchange-rate">Exchange rate</h3>
-<p>The real exchange rate data is obtained from the Reserve Bank of Australia (RBA) and is provided on a quarterly basis. RBA uses Australian dolloar trade-weighted index as a measure of real exchange rate. It is the price of the Australian dollar interms of a group of foeign currencies based on the share of trade with Australia.</p>
+<p>The real exchange rate data is sourced from the Reserve Bank of Australia (RBA) and is provided on a quarterly basis. RBA uses the Australian dollar trade-weighted index as a measure of the real exchange rate. This index represents the price of the Australian dollar in terms of a group of foreign currencies, based on their share of trade with Australia.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># TWI </span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>real_exchange_rate <span class="ot">&lt;-</span> <span class="fu">read_rba</span>(<span class="st">"F15"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>real_exchange_rate<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(real_exchange_rate<span class="sc">$</span>date, <span class="at">format =</span> <span class="st">"%Y-%m-%d"</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>real_exchange_rate_twi <span class="ot">&lt;-</span> <span class="fu">subset</span>(real_exchange_rate, series_id <span class="sc">==</span> <span class="st">"FRERTWI"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
 </div>
+</div>
+<p>Additionally, I also investigate the nominal exchange rate variable. I download the AUD/USD exchange rate, as the US dollar is widely accepted as an international currency. (Note: The data obtained using the package may not exactly match the description on the website.) However, since the nominal exchange rate may be influenced by various factors and due to data availability constraints, this research will focus exclusively on the real interest rate (TWI).</p>
+</section>
+<section id="trade-balance" class="level3">
+<h3 class="anchored" data-anchor-id="trade-balance">Trade balance</h3>
+<p>The trade balance data is measured as a percentage of output and is recorded on a quarterly basis with seasonal adjustments. Upon examining the plot of this data, it appears to have been stationary before the COVID period. However, since then, the trade balance has been increasing. I will also include this variable in my model as a control variable.</p>
 <div class="cell">
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">adf.test</span>(real_exchange_rate_twi<span class="sc">$</span>value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-    Augmented Dickey-Fuller Test
-
-data:  real_exchange_rate_twi$value
-Dickey-Fuller = -1.8165, Lag order = 5, p-value = 0.653
-alternative hypothesis: stationary</code></pre>
-</div>
-</div>
-<p>Moreover, I also examine the nominal exchange rate variable. I download the AUD/USD exchange rate, as the US dollar is widely accepted as an international currency. I transform the daily data into quarterly data with mean. The figure displaying this data is shown below. (Note: The data obtained using the package may not exactly match the description on the website.) However, since the nominal interest rate may be influenced by various factors and also due to data availability, this research will focus solely on the real interest rate(TWI).</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exchange rate US/AUD not sure if I will use it in the model</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> exchange_rate <span class="ot">&lt;-</span> <span class="fu">read_rba</span>(<span class="at">table_no =</span> <span class="st">'F11.1'</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>exchange_rate<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(exchange_rate<span class="sc">$</span>date, <span class="at">format =</span> <span class="st">"%Y-%m-%d"</span>)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate quarterly averages</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>exchange_rate_quarterly <span class="ot">&lt;-</span> exchange_rate <span class="sc">%&gt;%</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a> <span class="fu">mutate</span>(<span class="at">Quarter =</span> <span class="fu">as.yearqtr</span>(Date)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">group_by</span>(Quarter) <span class="sc">%&gt;%</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a> <span class="fu">summarize</span>(<span class="at">ExchangeRate =</span> <span class="fu">mean</span>(value, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the quarterly data</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>plot_exchange <span class="ot">=</span> <span class="fu">ggplot</span>(exchange_rate_quarterly, <span class="fu">aes</span>(<span class="at">x =</span> Quarter, <span class="at">y =</span> ExchangeRate)) <span class="sc">+</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"blue"</span>) <span class="sc">+</span></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Date"</span>, <span class="at">y =</span> <span class="st">"Exchange Rate"</span>, <span class="at">title =</span> <span class="st">"Quarterly Exchange Rate (AUD/USD)"</span>) <span class="sc">+</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>comma)</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>combined_plot <span class="ot">&lt;-</span> <span class="fu">plot_grid</span>( plot1, plot_exchange, <span class="at">ncol =</span> <span class="dv">1</span>, <span class="at">align =</span> <span class="st">"v"</span>)</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Print the combined plot</span></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(combined_plot)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
-</div>
-</div>
-</section>
-<section id="trade-balance" class="level3">
-<h3 class="anchored" data-anchor-id="trade-balance">Trade balance</h3>
-<p>The trade balance data is measured as a percentage of output and is recorded on a quarterly basis with seasonal adjustments. Upon examining the plot of this data, it appears to have been stationary prior to the COVID period. However, since then, the trade balance has been increasing. I will also have this variable in my model as a control variable.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Trade_balance <span class="ot">&lt;-</span> <span class="fu">read_rba</span>(<span class="st">"I1"</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>Trade_balance<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(Trade_balance<span class="sc">$</span>date, <span class="at">format =</span> <span class="st">"%Y-%m-%d"</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>Trade_balance2 <span class="ot">&lt;-</span> <span class="fu">subset</span>(Trade_balance, series_id <span class="sc">==</span> <span class="st">"HTBGSCPGDP"</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a line plot of real_exchange_rate_twi</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>plot2<span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> Trade_balance2, <span class="fu">aes</span>(<span class="at">x =</span> Date, <span class="at">y =</span> value)) <span class="sc">+</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">" Trade balance as a per cent of output"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Index"</span>) <span class="sc">+</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(plot2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
-</div>
-</div>
 </section>
 <section id="government-spending-data" class="level3">
 <h3 class="anchored" data-anchor-id="government-spending-data">government spending data</h3>
-<p>Due to package contraints, readrba or readabs are not applicable for government spending data because the data published about public sector is yearly based on ABS. I use fred as my data source instead. Government spending is increasing due to the increasing trend, thus I use function lag() to transform this data. Both the figure and the ADF test indicates it is stationary. I will also include this variable in my model.</p>
+<p>Due to package constraints, readrba or readabs are not applicable for government spending data, as the data published about the public sector by ABS is yearly. Instead, I use FRED as my data source. Government spending is increasing due to the upward trend, so I use the lag() function to transform this data. I will keep the lof transformation of the original variable.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the library</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fredr)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Set your FRED API key</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">readRenviron</span>(<span class="st">"secret.R"</span>)</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>api_key <span class="ot">&lt;-</span><span class="fu">Sys.getenv</span>(<span class="st">"MY_FRED_API_KEY"</span>)</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">fredr_set_key</span>(api_key)</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Download the Australian government spending data (quarterly data, seasonally adjusted)</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>gov_spending_australia <span class="ot">&lt;-</span> <span class="fu">fredr</span>(<span class="at">series_id =</span> <span class="st">"AUSGFCEQDSMEI"</span>,<span class="at">observation_start =</span> <span class="fu">as.Date</span>(<span class="st">"1990-01-01"</span>))</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>gov_spending_australia<span class="sc">$</span>log_gov <span class="ot">=</span> <span class="fu">log</span>(gov_spending_australia<span class="sc">$</span>value)</span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>gov_spending_australia <span class="ot">&lt;-</span> gov_spending_australia <span class="sc">%&gt;%</span></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percentage_change =</span> (value <span class="sc">-</span> <span class="fu">lag</span>(value)) <span class="sc">/</span> <span class="fu">lag</span>(value) <span class="sc">*</span> <span class="dv">100</span>)</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate real government spending</span></span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the data</span></span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>plot_log <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gov_spending_australia, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> log_gov)) <span class="sc">+</span></span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Australian Government Spending(log)"</span>,</span>
-<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Date"</span>,</span>
-<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Value"</span>) <span class="sc">+</span></span>
-<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">" Australian Government Spending"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Index"</span>) <span class="sc">+</span></span>
-<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
-<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>plot_gd<span class="ot">&lt;-</span>  <span class="fu">ggplot</span>(gov_spending_australia, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> percentage_change )) <span class="sc">+</span></span>
-<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Australian Government Spending Percentage change"</span>,</span>
-<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Date"</span>,</span>
-<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Value"</span>) <span class="sc">+</span></span>
-<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">" Trade balance as a per cent of output"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Index"</span>) <span class="sc">+</span></span>
-<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
-<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
-<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>gd <span class="ot">=</span> <span class="fu">plot_grid</span>( plot_log,plot_gd ,<span class="at">ncol =</span> <span class="dv">1</span>, <span class="at">align =</span> <span class="st">"v"</span>)</span>
-<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(gd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">adf.test</span>(<span class="fu">na.omit</span>(gov_spending_australia<span class="sc">$</span>percentage_change))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>I also run the ADF test for this variable, and with a p-value of 0.5, we cannot reject the null hypothesis, indicating that the government spending data is expected to be non-stationary. For completeness, I also plot the ACF (autocorrelation function) and PACF (partial autocorrelation function). As shown in the ACF, there is a slow and gradual decay, suggesting that an autoregressive process might be suitable for the data. The PACF results also support using an AR model because the plot has a shorp cuf-off.</p>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Augmented Dickey-Fuller Test
 
-data:  na.omit(gov_spending_australia$percentage_change)
-Dickey-Fuller = -3.6596, Lag order = 5, p-value = 0.03065
+data:  gov_spending_australia$log_gov
+Dickey-Fuller = -2.1325, Lag order = 5, p-value = 0.5205
 alternative hypothesis: stationary</code></pre>
 </div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-7-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="preliminary-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="preliminary-data-analysis">preliminary Data Analysis</h2>
+<p>In this section, I will present a table of the ADF test results for the remaining variables for completeness. As stated in the previous section, I will retain the log transformation of the original variable in my research. Additionally, the PACF and ACF tests suggest using an autoregression model. ### ADF test</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 3
+  Variable           Test_statistic Critical_value
+  &lt;chr&gt;                       &lt;dbl&gt;          &lt;dbl&gt;
+1 consumption                 4.44           -2.58
+2 consumption_growth         -3.14           -2.58
+3 log_con                     6.53           -2.58
+4 GDP                         6.22           -2.58
+5 log_gdp                     7.39           -2.58
+6 GDP_percentage             -6.37           -2.58
+7 TWI                        -0.346          -2.58
+8 Trade_balance              -1.92           -2.58</code></pre>
+</div>
+</div>
+<p>As anticipated, macroeconomic data is typically non-stationary. The only exception in this case is the real exchange rate, which is stationary.</p>
+<section id="pacf-and-acf-test" class="level3">
+<h3 class="anchored" data-anchor-id="pacf-and-acf-test">PACF and ACF test</h3>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-9-2.png" class="img-fluid" width="672"></p>
+</div>
 </div>
 </section>
 </section>
 </section>
-<section id="the-model-and-hypothesis" class="level1">
-<h1>3. The model and hypothesis</h1>
-<p>State the model equations including the assumptions regarding the model’s error terms. Explain every single notation you introduce to state the model. Explain how you will use the model to answer your research question and how it addresses your objectives. Explain what estimation output you will interpret to answer your research question. Bring about the relevant economic context.</p>
-<section id="impusle-response-function" class="level2">
-<h2 class="anchored" data-anchor-id="impusle-response-function">Impusle response function</h2>
-<p>What irf I am interested. what type of output</p>
-</section>
-<section id="variance-decomposition" class="level2">
-<h2 class="anchored" data-anchor-id="variance-decomposition">Variance Decomposition</h2>
-</section>
+<section id="the-model" class="level1">
+<h1>3. The model</h1>
 <section id="model-specification" class="level2">
 <h2 class="anchored" data-anchor-id="model-specification">Model Specification</h2>
-<p>Using same notations in lecture, the model is specified as follows: <span class="math display">\[B_0 y_t = b_0 + B_1 y_{t-1}+ ... + B_p y_{t-p}+\varepsilon_t\]</span></p>
+<p>Using same notations in lecture, the model is specified as follows: <span class="math display">\[B_0 y_t = b_0 + B_1 y_{t-1}+ ... + B_p y_{t-p}+u_t\]</span> Then the empirical model for this study is a structural vector autoregression of the reduced form representation</p>
+<p><span class="math display">\[  \begin{bmatrix} \hat{g_t} \\   \hat{c_t} \\ \hat{y_t} \\ \hat{e}_t \end{bmatrix} = A(L) \begin{bmatrix} \hat{g}_{t-1} \\   \hat{c}_{t-1} \\ \hat{y}_{t-1} \\ \hat{e}_{t-1} \end{bmatrix} + \varepsilon_t \]</span> Where:</p>
+<p><span class="math inline">\(g_t\)</span> denotes real government spending,</p>
+<p><span class="math inline">\(c_t\)</span> denotes household final consumption,</p>
+<p><span class="math inline">\(y_t\)</span> denotes real GDP,</p>
+<p><span class="math inline">\(e_t\)</span> denotes the real exchange rate (trade-weighted index),</p>
+<p><span class="math inline">\(A(L)\)</span> is an nxn matrix polynomial in the lag operator L, representing the dynamic relationships among the endogenous variables,</p>
+<p><span class="math inline">\(\varepsilon_t\)</span> is a vector of the structural shocks at time t: <span class="math inline">\(\varepsilon_t = [\varepsilon_{g_t}, \varepsilon_{c_t}, \varepsilon_{y_t}, \varepsilon_{e_t}]^T\)</span>.</p>
+<p>Assumptions regarding the model’s error terms: <span class="math inline">\(\varepsilon_t |Y_{t-1} \sim iid(0_N, Σ)\)</span></p>
+</section>
+<section id="impusle-response-function-and-forecast-error-variance-decomposition" class="level2">
+<h2 class="anchored" data-anchor-id="impusle-response-function-and-forecast-error-variance-decomposition">Impusle response function and Forecast error variance decomposition</h2>
+<p>The research project aims to model the effect of government spending shocks on output, real exchange rate, and consumption. The SVAR model specified above captures the dynamic relationships among the endogenous variables. To answer the research questions, I will use the SVAR model to estimate the impulse response functions (IRFs) and forecast error variance decomposition (FEVDs) for each endogenous variable. With IRFs, I will be able to observe the dynamic response of each variable, while the FEVDs will quantify the portions of the forecast error variance of each variable attributable to the shocks this paper aims to identify.</p>
+</section>
+<section id="relevant-economic-context" class="level2">
+<h2 class="anchored" data-anchor-id="relevant-economic-context">Relevant economic context</h2>
+<p>I would expect the IRF for government spending to initially increase in response to the government spending shock and then decrease to the steady state. Consumption and GDP will also increase, but on a smaller scale compared to government spending. I am uncertain about the real exchange rate. Data shows that the real exchange rate will increase upon the shock and continue to rise after the shock.</p>
 </section>
 <section id="references" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+
+
 
 
 </section>
 </section>
 
-</main> <!-- /main -->
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-rba2023statistics" class="csl-entry" role="listitem">
+Australia, Reserve Bank of. 2023. <span>“Statistics Tables.”</span> url = <span>https://www.rba.gov.au/statistics/tables</span>.
+</div>
+<div id="ref-FRED" class="csl-entry" role="listitem">
+St. Louis, Federal Reserve Bank of. Accessed: 5 April 2023. <span>“<span>FRED (Federal Reserve Economic Data)</span>.”</span> <a href="https://fred.stlouisfed.org/" class="uri">https://fred.stlouisfed.org/</a>.
+</div>
+<div id="ref-abs2021government" class="csl-entry" role="listitem">
+Statistics, Australian Bureau of. 2021. <span>“Government Finance Statistics, Annual.”</span> <a href="https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2020-21" class="uri">https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2020-21</a>.
+</div>
+<div id="ref-fed2023federal" class="csl-entry" role="listitem">
+U.S. Office of Management and Budget and Federal Reserve Bank of St. Louis. 2023. <span>“Federal Debt: Total Public Debt as Percent of Gross Domestic Product [GFDEGDQ188S].”</span> <a href="https://fred.stlouisfed.org/series/GFDEGDQ188S" class="uri">https://fred.stlouisfed.org/series/GFDEGDQ188S</a>.
+</div>
+</div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
