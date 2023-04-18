@@ -41,6 +41,7 @@ Initially, I will load the packages that enable direct data downloads from the R
 
 ```{r, echo=TRUE}
 library(readrba)
+library(readrba)
 library(tseries)
 library(ggplot2)
 library(cowplot)
@@ -49,6 +50,7 @@ library(zoo)
 library(tidyverse)
 library(fredr)
 library(urca)
+library(xts)
 ```
 
 
@@ -138,7 +140,7 @@ plot2<- ggplot(data = df, aes(x = Date, y =log_gdp)) +
         legend.position = "none")
 plot3<- ggplot(data = df, aes(x = Date, y =GDP_percentage)) +
   geom_line(color = "steelblue", size = 0.8) +
-  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
+  labs(title = " GDP percentage change", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
@@ -170,7 +172,7 @@ df <- merge(df,real_exchange_rate_twi, by='Date')
 
 plot5<- ggplot(data = df, aes(x = Date, y =TWI)) +
   geom_line(color = "steelblue", size = 0.8) +
-  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
+  labs(title = " Real exchange rate (TWI)", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
@@ -207,7 +209,7 @@ df <- merge(df,Trade_balance2,by = "Date")
 
 plot6<- ggplot(data = df, aes(x = Date, y =Trade_balance)) +
   geom_line(color = "steelblue", size = 0.8) +
-  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
+  labs(title = " Trade Balance", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
@@ -219,7 +221,55 @@ print(plot6)
 ```
 
 
+### Inflation
 
+```{r}
+CPI = read_rba("G1")
+
+
+
+inflation <- CPI %>%
+  filter(series_id == "GCPIAGQP") %>%
+  rename(Date = date, Quarterly_inflation = value) %>%
+  select(Date, Quarterly_inflation)
+
+
+df <- merge(df,inflation,by = "Date")
+```
+### M3
+
+```{r}
+M3 <- read_rba("D3")
+
+# Filter, rename, and select columns
+M3 <- M3 %>%
+  filter(series_id == "DMAM3N") %>%
+  rename(Date = date, M3 = value) %>%
+  select(Date, M3)
+
+# Create a zoo object
+M3.zoo <- zoo(M3$M3, M3$Date)
+
+
+# Function to convert the index to quarterly and set the last day of each quarter
+to_quarter <- function(x) {
+  as.yearqtr(format(x, "%Y-%m-%d"), format = "%Y-%m")
+}
+
+# Aggregate the monthly data to quarterly
+M3_quarterly <- aggregate(M3.zoo, to_quarter, mean)
+
+# Function to convert the yearqtr object to the last day of each quarter
+yearqtr_to_quarter_end <- function(x) {
+  as.Date(as.yearqtr(x) + 1/4 - 1, frac = 1)
+}
+
+# Convert the aggregated quarterly data back to a data frame
+M3_quarterly_df <- data.frame(Date = yearqtr_to_quarter_end(index(M3_quarterly)), M3 = coredata(M3_quarterly))
+
+df = merge(df,M3_quarterly_df, by= "Date")
+
+```
 
 ### government spending data
 Due to package constraints, readrba or readabs are not applicable for government spending data, as the data published about the public sector by ABS is yearly. Instead, I use FRED as my data source. Government spending is increasing due to the upward trend, so I use the lag() function to transform this data.  I will keep the lof transformation of the original variable.
@@ -246,7 +296,7 @@ select(date,value,percentage_change,log_gov) %>%
 
 plot7<- ggplot(data = gov_spending_australia, aes(x = Date, y =log_gov)) +
   geom_line(color = "steelblue", size = 0.8) +
-  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
+  labs(title = " Government Spending", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
@@ -255,7 +305,7 @@ plot7<- ggplot(data = gov_spending_australia, aes(x = Date, y =log_gov)) +
 
 plot8<- ggplot(data = gov_spending_australia, aes(x = Date, y =percentage_change)) +
   geom_line(color = "steelblue", size = 0.8) +
-  labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
+  labs(title = " Government Spending percentage change", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
@@ -351,7 +401,7 @@ Using same notations in lecture, the model is specified as follows:
 $$B_0 y_t = b_0 + B_1 y_{t-1}+ ... + B_p y_{t-p}+u_t$$
 Then the empirical model for this study is a structural vector autoregression of the reduced form representation
 
-$$  \begin{bmatrix} \hat{g_t} \\   \hat{c_t} \\ \hat{y_t} \\ \hat{e}_t \end{bmatrix} = A(L) \begin{bmatrix} \hat{g}_{t-1} \\   \hat{c}_{t-1} \\ \hat{y}_{t-1} \\ \hat{e}_{t-1} \end{bmatrix} + \varepsilon_t $$
+$$  \begin{bmatrix} \hat{g_t} \\   \hat{c_t} \\ \hat{y_t} \\ \hat{e}_t \\ \hat{i}_t  \\ \hat{m}_t \end{bmatrix} = A(L) \begin{bmatrix} \hat{g}_{t-1} \\   \hat{c}_{t-1} \\ \hat{y}_{t-1} \\ \hat{e}_{t-1} \\\hat{i}_{t-1  }\\ \hat{m}_{t-1} \end{bmatrix} + \varepsilon_t $$
 Where:
 
 $g_t$ denotes real government spending,
@@ -361,6 +411,8 @@ $c_t$ denotes household final consumption,
 $y_t$ denotes real GDP,
 
 $e_t$ denotes the real exchange rate (trade-weighted index),
+$i_t$ denotes the inflation,
+$m_t$ denotes the M3. 
 
 $A(L)$ is an nxn matrix polynomial in the lag operator L, representing the dynamic relationships among the endogenous variables,
 
