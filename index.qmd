@@ -62,13 +62,79 @@ The dataset contains information on household final consumption expenditure, whi
 
 In the model, the original consumption variable is log-transformed to reduce the scale and conform to the assumption of normality.
 
+```{r}
+# Data extraction and cleaning
+# Consumption and consumption growhth
+consumption.dl   <- read_rba(series_id = "GGDPECCVPSH")
+consumption <- to.quarterly(xts(consumption.dl$value, consumption.dl$date), 
+                         OHLC = FALSE)
+consumption_growth <- 100*diff(log(consumption))
+# real GDP
+realGDP.dl   <- read_rba(series_id = "GGDPCVGDP")
+realGDP <- to.quarterly(xts(realGDP.dl$value, realGDP.dl$date), 
+                         OHLC = FALSE)
+realGDP_growth <- 100*diff(log(realGDP))
 
+# nominal GDP, seasonally adjusted (in case you decide to use this instead)
+nomGDP.dl <- read_abs(series_id = "A2454486X")
+nomGDP <- to.quarterly(xts(nomGDP.dl$value, nomGDP.dl$date), 
+                         OHLC = FALSE)
+
+nomGDP_growth <- 100*diff(log(nomGDP))
+
+# real exchange rate (TWI)
+realTWI.dl   <- read_rba(series_id = "FRERTWI")
+realTWI <- to.quarterly(xts(realTWI.dl$value, realTWI.dl$date), 
+                         OHLC = FALSE)
+# Trade balance
+imports.dl <- read_abs(series_id = "A2454505V")
+imports <- to.quarterly(xts(imports.dl$value, imports.dl$date), 
+                         OHLC = FALSE)
+
+exports.dl <- read_abs(series_id = "A2454510L") 
+exports <- to.quarterly(xts(exports.dl$value, exports.dl$date), 
+                         OHLC = FALSE)
+# Inflation
+CPI.dl <- read_abs(series_id = "A2325846C")
+CPI <- to.quarterly(xts(CPI.dl$value, CPI.dl$date), 
+                         OHLC = FALSE)
+
+CPI_inflation.dl <- read_rba(series_id = "GCPIAGQP")
+CPI_inflation <- to.quarterly(xts(CPI_inflation.dl$value, CPI_inflation.dl$date), 
+                         OHLC = FALSE)
+
+# M3
+M3.dl   <- read_rba(series_id = "DMAM3N")
+M3 <- to.quarterly(xts(M3.dl$value, M3.dl$date), 
+                         OHLC = FALSE)
+# Government spending, seasonally adjusted
+pubcons.dl <- read_abs(series_id = "A2304036K")
+pubcons <- to.quarterly(xts(pubcons.dl$value, pubcons.dl$date),
+                         OHLC = FALSE)
+
+pubinv.dl <- read_abs(series_id = "A2304064V")
+pubinv <- to.quarterly(xts(pubinv.dl$value, pubinv.dl$date), 
+                         OHLC = FALSE)
+
+gov_spend <- pubcons + pubinv
+
+# matrix of endogenous variables 
+df <- na.omit(merge(consumption, realGDP, nomGDP,  realTWI, imports, exports, 
+                    CPI, M3, gov_spend))
+# transformed in log terms
+log_df <- log(df)
+
+#growth rates including inflation 
+growth_df <- na.omit(merge(consumption_growth, realGDP_growth, nomGDP_growth, CPI_inflation))
+
+```
 
 ```{r}
 consumption <- read_rba('H2')
 consumption$Date <- as.Date(consumption$date, format = "%Y-%m-%d")
 
 # Household final consumption expenditure measured in $million
+##plot(100*diff(df$log_con), type = "l")
 
 consumption2 <- consumption %>%
   filter(series_id == "GGDPECCVPSH") %>%
