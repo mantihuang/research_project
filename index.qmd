@@ -382,24 +382,31 @@ for (i in seq_along(data_without_date)) {
 
 
 ## Model Specification 
-Using same notations in lecture, the model is specified as follows:
-$$B_0 y_t = b_0 + B_1 y_{t-1}+ ... + B_p y_{t-p}+u_t$$
-Then the empirical model for this study is a structural vector autoregression of the reduced form representation
+The structural model is specified as follows:
+$$\begin{align}
+B_0y_t &= b_0 + B_1 y_{t-1} + \dots + B_p y_{t-p} + u_t\\
+u_{t}| Y_{t-1} &\sim _{iid} ( 0, I_N)
+\end{align}$$
 
-$$  \begin{bmatrix} \hat{g_t} \\   \hat{c_t} \\ \hat{y_t} \\ \hat{e}_t \\ \hat{i}_t  \\ \hat{m}_t \end{bmatrix} = A(L) \begin{bmatrix} \hat{g}_{t-1} \\   \hat{c}_{t-1} \\ \hat{y}_{t-1} \\ \hat{e}_{t-1} \\\hat{i}_{t-1  }\\ \hat{m}_{t-1} \end{bmatrix} + \varepsilon_t $$
+Then the empirical model for this study is a structural vector autoregression of the reduced form representation:
+
+$$\begin{align}
+y_t &= \mu_0 + A_1 y_{t-1} + \dots + A_p y_{t-p} + \varepsilon_t\\
+\text{where }B_0^{-1}u_t &= \varepsilon_t| Y_{t-1} \sim _{iid} ( 0, \Sigma)\\
+\Sigma &= B_0^{-1}B_0^{-1'}
+\end{align}$$
+
 Where:
 
-$g_t$ denotes real government spending,
-
-$c_t$ denotes household final consumption,
-
-$y_t$ denotes real GDP,
-
-$e_t$ denotes the real exchange rate (trade-weighted index),
-$i_t$ denotes the inflation,
-$m_t$ denotes the M3. 
-
-$A(L)$ is an nxn matrix polynomial in the lag operator L, representing the dynamic relationships among the endogenous variables,
+$$y_t=\begin{pmatrix}  govspend_t &= \text{government spending}
+\\ consump_t  &= \text{consumption}
+\\ realGDP_t  &= \text{real GDP}
+\\ TWI_t  &= \text{real exchange rate (trade-weighted index)}
+\\ CPI_t  &= \text{consumer price index}
+\\ export_t  &= \text{exports}
+\\ imports_t  &= \text{imports}
+\\ M3_t  &= \text{M3 money supply}
+\end{pmatrix}$$
 
 $\varepsilon_t$ is a vector of the structural shocks at time t: $\varepsilon_t = [\varepsilon_{g_t}, \varepsilon_{c_t}, \varepsilon_{y_t}, \varepsilon_{e_t}]^T$.
 
