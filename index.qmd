@@ -62,31 +62,81 @@ The dataset contains information on household final consumption expenditure, whi
 
 In the model, the original consumption variable is log-transformed to reduce the scale and conform to the assumption of normality.
 
+```{r}
+# Data extraction and cleaning
+# Consumption and consumption growhth
+consumption.dl   <- read_rba(series_id = "GGDPECCVPSH")
+consumption <- to.quarterly(xts(consumption.dl$value, consumption.dl$date), 
+                         OHLC = FALSE)
+consumption_growth <- 100*diff(log(consumption))
+# real GDP
+realGDP.dl   <- read_rba(series_id = "GGDPCVGDP")
+realGDP <- to.quarterly(xts(realGDP.dl$value, realGDP.dl$date), 
+                         OHLC = FALSE)
+realGDP_growth <- 100*diff(log(realGDP))
 
+# nominal GDP, seasonally adjusted (in case you decide to use this instead)
+nomGDP.dl <- read_abs(series_id = "A2454486X")
+nomGDP <- to.quarterly(xts(nomGDP.dl$value, nomGDP.dl$date), 
+                         OHLC = FALSE)
+
+nomGDP_growth <- 100*diff(log(nomGDP))
+
+# real exchange rate (TWI)
+realTWI.dl   <- read_rba(series_id = "FRERTWI")
+realTWI <- to.quarterly(xts(realTWI.dl$value, realTWI.dl$date), 
+                         OHLC = FALSE)
+# Trade balance
+imports.dl <- read_abs(series_id = "A2454505V")
+imports <- to.quarterly(xts(imports.dl$value, imports.dl$date), 
+                         OHLC = FALSE)
+
+exports.dl <- read_abs(series_id = "A2454510L") 
+exports <- to.quarterly(xts(exports.dl$value, exports.dl$date), 
+                         OHLC = FALSE)
+# Inflation
+CPI.dl <- read_abs(series_id = "A2325846C")
+CPI <- to.quarterly(xts(CPI.dl$value, CPI.dl$date), 
+                         OHLC = FALSE)
+
+CPI_inflation.dl <- read_rba(series_id = "GCPIAGQP")
+CPI_inflation <- to.quarterly(xts(CPI_inflation.dl$value, CPI_inflation.dl$date), 
+                         OHLC = FALSE)
+
+# M3
+M3.dl   <- read_rba(series_id = "DMAM3N")
+M3 <- to.quarterly(xts(M3.dl$value, M3.dl$date), 
+                         OHLC = FALSE)
+# Government spending, seasonally adjusted
+pubcons.dl <- read_abs(series_id = "A2304036K")
+pubcons <- to.quarterly(xts(pubcons.dl$value, pubcons.dl$date),
+                         OHLC = FALSE)
+
+pubinv.dl <- read_abs(series_id = "A2304064V")
+pubinv <- to.quarterly(xts(pubinv.dl$value, pubinv.dl$date), 
+                         OHLC = FALSE)
+
+gov_spend <- pubcons + pubinv
+gov_spend_growth <- 100*diff(log(gov_spend))
+
+# matrix of endogenous variables 
+df <- na.omit(merge(consumption, realGDP, nomGDP,  realTWI, imports, exports, 
+                    CPI, M3, gov_spend))
+
+df$Date <- as.vector(index(df))
+# transformed in log terms
+log_df <- log(df)
+log_df$Date <- as.vector(index(log_df))
+
+#growth rates including inflation 
+growth_df <- na.omit(merge(consumption_growth, realGDP_growth, nomGDP_growth, CPI_inflation, 
+                           gov_spend_growth))
+growth_df$Date <- as.vector(index(growth_df))
+```
 
 ```{r}
-consumption <- read_rba('H2')
-consumption$Date <- as.Date(consumption$date, format = "%Y-%m-%d")
-
-# Household final consumption expenditure measured in $million
-
-consumption2 <- consumption %>%
-  filter(series_id == "GGDPECCVPSH") %>%
-  rename(consumption = value)
-
-df <- consumption2 %>% select(Date,consumption)
-# Consumption growth
-consumption3 <- consumption %>%
-  filter(series_id == "GGDPECCVPSHY") %>%
-  rename(consumption_growth = value) %>% select(Date,consumption_growth)
-
-df <- merge(df,consumption3,by="Date")
-
-df$log_con = log(df$consumption)
-
-
-# Plot the data
-plot1<- ggplot(data = df, aes(x = Date, y =log_con)) +
+# Consumption levels and growth plot
+plot1<- ggplot(data = log_df, aes(x = Date, y =consumption)) +
   geom_line(color = "steelblue", size = 0.8) +
   labs(title = " Household Consumption (log)", x = "Year", y = "Index") +
   theme_bw() +
@@ -94,7 +144,7 @@ plot1<- ggplot(data = df, aes(x = Date, y =log_con)) +
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
-plot2<- ggplot(data = df, aes(x = Date, y =consumption_growth)) +
+plot2<- ggplot(data = growth_df, aes(x = Date, y =consumption_growth)) +
   geom_line(color = "steelblue", size = 0.8) +
   labs(title = " Household Consumption Growth", x = "Year", y = "Index") +
   theme_bw() +
@@ -103,8 +153,8 @@ plot2<- ggplot(data = df, aes(x = Date, y =consumption_growth)) +
         axis.text = element_text(size = 12),
         legend.position = "none")
 
-consumption_plot <- plot_grid(plot1, plot2,  ncol = 1, align = "v")
-print(consumption_plot)
+plot <- plot_grid(plot1, plot2,  ncol = 1, align = "v")
+print(plot)
 
 ```
 ### GDP
@@ -113,24 +163,9 @@ The real GDP is measured in million dollars, and the plot of this data suggests 
 
 When examining the plot of the GDP percentage change, it appears to be more stationary over time. However, the data fluctuates significantly during the COVID period. In a later section, I also run ACF and PACF tests, which suggest that I should keep the original variable.
 ```{r}
-# GDP
-GDP <- read_rba('H1')
-GDP$Date <- as.Date(GDP$date, format = "%Y-%m-%d")
-# Real GDP
+# GDP levels and growth plot
 
-GDP2 <- GDP %>%
-  filter(series_id == "GGDPCVGDP") %>%
-  rename(GDP = value) %>%
-  select(Date,GDP)
-
-df <- merge(df,GDP2, by="Date")
-
-df$log_gdp = log(df$GDP)
-
-# First difference for gdp
-df <- df %>% mutate(GDP_percentage = (GDP-lag(GDP))/lag(GDP)*100)
-
-plot2<- ggplot(data = df, aes(x = Date, y =log_gdp)) +
+plot2<- ggplot(data = log_df, aes(x = Date, y =realGDP)) +
   geom_line(color = "steelblue", size = 0.8) +
   labs(title = " GDP (log)", x = "Year", y = "Index") +
   theme_bw() +
@@ -138,7 +173,7 @@ plot2<- ggplot(data = df, aes(x = Date, y =log_gdp)) +
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
-plot3<- ggplot(data = df, aes(x = Date, y =GDP_percentage)) +
+plot3<- ggplot(data = growth_df, aes(x = Date, y =realGDP_growth)) +
   geom_line(color = "steelblue", size = 0.8) +
   labs(title = " GDP percentage change", x = "Year", y = "Index") +
   theme_bw() +
@@ -147,30 +182,16 @@ plot3<- ggplot(data = df, aes(x = Date, y =GDP_percentage)) +
         axis.text = element_text(size = 12),
         legend.position = "none")
 
-consumption_plot <- plot_grid(plot2, plot3,  ncol = 1, align = "v")
-print(consumption_plot)
+plot <- plot_grid(plot2, plot3,  ncol = 1, align = "v")
+print(plot)
 
 ```
 ### Exchange rate
 
 The real exchange rate data is sourced from the Reserve Bank of Australia (RBA) and is provided on a quarterly basis. RBA uses the Australian dollar trade-weighted index as a measure of the real exchange rate. This index represents the price of the Australian dollar in terms of a group of foreign currencies, based on their share of trade with Australia.
 ```{r }
-
-
 # TWI 
-
-real_exchange_rate <- read_rba("F15")
-real_exchange_rate$Date <- as.Date(real_exchange_rate$date, format = "%Y-%m-%d")
-
-real_exchange_rate_twi <-   real_exchange_rate %>%
-  filter(series_id == "FRERTWI") %>%
-  rename(TWI = value) %>%
-  select(Date,TWI)
-  
-df <- merge(df,real_exchange_rate_twi, by='Date')
-
-
-plot5<- ggplot(data = df, aes(x = Date, y =TWI)) +
+plot5<- ggplot(data = df, aes(x = Date, y =realTWI)) +
   geom_line(color = "steelblue", size = 0.8) +
   labs(title = " Real exchange rate (TWI)", x = "Year", y = "Index") +
   theme_bw() +
@@ -181,12 +202,6 @@ plot5<- ggplot(data = df, aes(x = Date, y =TWI)) +
 
 print(plot5)
 ```
-
-
-
-
-
-
 Additionally, I also investigate the nominal exchange rate variable. I download the AUD/USD exchange rate, as the US dollar is widely accepted as an international currency. (Note: The data obtained using the package may not exactly match the description on the website.) However, since the nominal exchange rate may be influenced by various factors and due to data availability constraints, this research will focus exclusively on the real interest rate (TWI).
 
 
@@ -197,19 +212,11 @@ The trade balance data is measured as a percentage of output and is recorded on 
 
 
 ```{r}
-Trade_balance <- read_rba("I1")
 
-Trade_balance$Date <- as.Date(Trade_balance$date, format = "%Y-%m-%d")
-
-Trade_balance2 <- Trade_balance   %>%
-filter(series_id == "HTBGSCPGDP") %>%
-  rename(Trade_balance = value) %>%
-  select(Date,Trade_balance)
-df <- merge(df,Trade_balance2,by = "Date")
-
-plot6<- ggplot(data = df, aes(x = Date, y =Trade_balance)) +
-  geom_line(color = "steelblue", size = 0.8) +
-  labs(title = " Trade Balance", x = "Year", y = "Index") +
+plot6<- ggplot(data = log_df, aes(x = Date)) +
+  geom_line(aes(y = exports-imports), color = "steelblue", size = 0.8) +
+  #geom_line(aes(y = imports), color = "firebrick", size = 0.8) +
+  labs(title = " Trade Balance (log)", x = "Year", y = "Index") +
   theme_bw() +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14, face = "bold"),
@@ -225,8 +232,6 @@ print(plot6)
 
 ```{r}
 CPI = read_rba("G1")
-
-
 
 inflation <- CPI %>%
   filter(series_id == "GCPIAGQP") %>%
@@ -274,27 +279,7 @@ df = merge(df,M3_quarterly_df, by= "Date")
 ### government spending data
 Due to package constraints, readrba or readabs are not applicable for government spending data, as the data published about the public sector by ABS is yearly. Instead, I use FRED as my data source. Government spending is increasing due to the upward trend, so I use the lag() function to transform this data.  I will keep the lof transformation of the original variable.
 ```{r}
-# Set your FRED API key
-
-readRenviron("secret.R")
-api_key <-Sys.getenv("MY_FRED_API_KEY")
-fredr_set_key(api_key)
-
-# Download the Australian government spending data (quarterly data, seasonally adjusted)
-gov_spending_australia <- fredr(series_id = "AUSGFCEQDSMEI",observation_start = as.Date("1970-01-01"))
-
-#  Real General Government Final Consumption Expenditure for Australia 
-gov_spending_australia <- fredr(series_id = "NCGGRSAXDCAUQ",observation_start = as.Date("1970-01-01"))
-
-
-gov_spending_australia$log_gov = log(gov_spending_australia$value)
-
-gov_spending_australia <- gov_spending_australia %>%
-  mutate(percentage_change = (value - lag(value)) / lag(value) * 100) %>% 
-select(date,value,percentage_change,log_gov) %>%
-  rename(Date = date)
-
-plot7<- ggplot(data = gov_spending_australia, aes(x = Date, y =log_gov)) +
+plot7<- ggplot(data = log_df, aes(x = Date, y =gov_spend)) +
   geom_line(color = "steelblue", size = 0.8) +
   labs(title = " Government Spending", x = "Year", y = "Index") +
   theme_bw() +
@@ -303,7 +288,7 @@ plot7<- ggplot(data = gov_spending_australia, aes(x = Date, y =log_gov)) +
         axis.text = element_text(size = 12),
         legend.position = "none")
 
-plot8<- ggplot(data = gov_spending_australia, aes(x = Date, y =percentage_change)) +
+plot8<- ggplot(data = growth_df, aes(x = Date, y =gov_spend_growth)) +
   geom_line(color = "steelblue", size = 0.8) +
   labs(title = " Government Spending percentage change", x = "Year", y = "Index") +
   theme_bw() +
@@ -397,24 +382,31 @@ for (i in seq_along(data_without_date)) {
 
 
 ## Model Specification 
-Using same notations in lecture, the model is specified as follows:
-$$B_0 y_t = b_0 + B_1 y_{t-1}+ ... + B_p y_{t-p}+u_t$$
-Then the empirical model for this study is a structural vector autoregression of the reduced form representation
+The structural model is specified as follows:
+$$\begin{align}
+B_0y_t &= b_0 + B_1 y_{t-1} + \dots + B_p y_{t-p} + u_t\\
+u_{t}| Y_{t-1} &\sim _{iid} ( 0, I_N)
+\end{align}$$
 
-$$  \begin{bmatrix} \hat{g_t} \\   \hat{c_t} \\ \hat{y_t} \\ \hat{e}_t \\ \hat{i}_t  \\ \hat{m}_t \end{bmatrix} = A(L) \begin{bmatrix} \hat{g}_{t-1} \\   \hat{c}_{t-1} \\ \hat{y}_{t-1} \\ \hat{e}_{t-1} \\\hat{i}_{t-1  }\\ \hat{m}_{t-1} \end{bmatrix} + \varepsilon_t $$
+Then the empirical model for this study is a structural vector autoregression of the reduced form representation:
+
+$$\begin{align}
+y_t &= \mu_0 + A_1 y_{t-1} + \dots + A_p y_{t-p} + \varepsilon_t\\
+\text{where }B_0^{-1}u_t &= \varepsilon_t| Y_{t-1} \sim _{iid} ( 0, \Sigma)\\
+\Sigma &= B_0^{-1}B_0^{-1'}
+\end{align}$$
+
 Where:
 
-$g_t$ denotes real government spending,
-
-$c_t$ denotes household final consumption,
-
-$y_t$ denotes real GDP,
-
-$e_t$ denotes the real exchange rate (trade-weighted index),
-$i_t$ denotes the inflation,
-$m_t$ denotes the M3. 
-
-$A(L)$ is an nxn matrix polynomial in the lag operator L, representing the dynamic relationships among the endogenous variables,
+$$y_t=\begin{pmatrix}  govspend_t &= \text{government spending}
+\\ consump_t  &= \text{consumption}
+\\ realGDP_t  &= \text{real GDP}
+\\ TWI_t  &= \text{real exchange rate (trade-weighted index)}
+\\ CPI_t  &= \text{consumer price index}
+\\ export_t  &= \text{exports}
+\\ imports_t  &= \text{imports}
+\\ M3_t  &= \text{M3 money supply}
+\end{pmatrix}$$
 
 $\varepsilon_t$ is a vector of the structural shocks at time t: $\varepsilon_t = [\varepsilon_{g_t}, \varepsilon_{c_t}, \varepsilon_{y_t}, \varepsilon_{e_t}]^T$.
 
