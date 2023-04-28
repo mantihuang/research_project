@@ -40,7 +40,7 @@ For this study, quarterly data will be utilized for estimation purposes, as it i
 Initially, I will load the packages that enable direct data downloads from the Reserve Bank of Australia [@rba2023statistics] and the Federal Reserve Bank of St. Louis [@FRED].
 
 ```{r, echo=TRUE}
-library(readrba)
+library(readabs)
 library(readrba)
 library(tseries)
 library(ggplot2)
@@ -231,48 +231,48 @@ print(plot6)
 ### Inflation
 
 ```{r}
-CPI = read_rba("G1")
-
-inflation <- CPI %>%
-  filter(series_id == "GCPIAGQP") %>%
-  rename(Date = date, Quarterly_inflation = value) %>%
-  select(Date, Quarterly_inflation)
-
-
-df <- merge(df,inflation,by = "Date")
+# CPI = read_rba("G1")
+# 
+# inflation <- CPI %>%
+#   filter(series_id == "GCPIAGQP") %>%
+#   rename(Date = date, Quarterly_inflation = value) %>%
+#   select(Date, Quarterly_inflation)
+# 
+# 
+# df <- merge(df,inflation,by = "Date")
 ```
 ### M3
 
 ```{r}
-M3 <- read_rba("D3")
-
-# Filter, rename, and select columns
-M3 <- M3 %>%
-  filter(series_id == "DMAM3N") %>%
-  rename(Date = date, M3 = value) %>%
-  select(Date, M3)
-
-# Create a zoo object
-M3.zoo <- zoo(M3$M3, M3$Date)
-
-
-# Function to convert the index to quarterly and set the last day of each quarter
-to_quarter <- function(x) {
-  as.yearqtr(format(x, "%Y-%m-%d"), format = "%Y-%m")
-}
-
-# Aggregate the monthly data to quarterly
-M3_quarterly <- aggregate(M3.zoo, to_quarter, mean)
-
-# Function to convert the yearqtr object to the last day of each quarter
-yearqtr_to_quarter_end <- function(x) {
-  as.Date(as.yearqtr(x) + 1/4 - 1, frac = 1)
-}
-
-# Convert the aggregated quarterly data back to a data frame
-M3_quarterly_df <- data.frame(Date = yearqtr_to_quarter_end(index(M3_quarterly)), M3 = coredata(M3_quarterly))
-
-df = merge(df,M3_quarterly_df, by= "Date")
+# M3 <- read_rba("D3")
+# 
+# # Filter, rename, and select columns
+# M3 <- M3 %>%
+#   filter(series_id == "DMAM3N") %>%
+#   rename(Date = date, M3 = value) %>%
+#   select(Date, M3)
+# 
+# # Create a zoo object
+# M3.zoo <- zoo(M3$M3, M3$Date)
+# 
+# 
+# # Function to convert the index to quarterly and set the last day of each quarter
+# to_quarter <- function(x) {
+#   as.yearqtr(format(x, "%Y-%m-%d"), format = "%Y-%m")
+# }
+# 
+# # Aggregate the monthly data to quarterly
+# M3_quarterly <- aggregate(M3.zoo, to_quarter, mean)
+# 
+# # Function to convert the yearqtr object to the last day of each quarter
+# yearqtr_to_quarter_end <- function(x) {
+#   as.Date(as.yearqtr(x) + 1/4 - 1, frac = 1)
+# }
+# 
+# # Convert the aggregated quarterly data back to a data frame
+# M3_quarterly_df <- data.frame(Date = yearqtr_to_quarter_end(index(M3_quarterly)), M3 = coredata(M3_quarterly))
+# 
+# df = merge(df,M3_quarterly_df, by= "Date")
 
 ```
 
@@ -302,9 +302,9 @@ print(gov_plot)
 ```
 I also run the ADF test for this variable, and with a p-value of 0.5, we cannot reject the null hypothesis, indicating that the government spending data is expected to be non-stationary. For completeness, I also plot the ACF (autocorrelation function) and PACF (partial autocorrelation function). As shown in the ACF, there is a slow and gradual decay, suggesting that an autoregressive process might be suitable for the data. The PACF results also support using an AR model because the plot has a shorp cuf-off.
 ```{r}
-adf.test(gov_spending_australia$log_gov)
-test1 = acf(gov_spending_australia$log_gov)
-test2 = pacf(gov_spending_australia$log_gov)
+# adf.test(gov_spending_australia$log_gov)
+# test1 = acf(gov_spending_australia$log_gov)
+# test2 = pacf(gov_spending_australia$log_gov)
 ```
 
 ## preliminary Data Analysis
@@ -314,32 +314,32 @@ In this section, I will present a table of the ADF test results for the remainin
  
 
 ```{r}
-
-## Preliminary test
-
-
-
-
-
-# Assuming your dataset is called 'data'
-data_without_date <- df[,-1] # Remove date column if it exists
-
-
-# Perform the ADF test on each variable and extract the test statistic and p-value
-adf_summary <- map_df(data_without_date, function(x) {
-  adf_test <- ur.df(x, type = "none", lags = 1)
-  adf_test_summary <- summary(adf_test)
-  tibble(
-    Test_statistic = adf_test_summary@teststat[1, 1],
-    Critical_value= adf_test_summary@cval[1, 1]
-  )
-}, .id = "Variable")
-
-# Add variable names to the summary table
-adf_summary$Variable <- colnames(data_without_date)
-
-# Display the ADF test summary table
-adf_summary
+# 
+# ## Preliminary test
+# 
+# 
+# 
+# 
+# 
+# # Assuming your dataset is called 'data'
+# data_without_date <- df[,-1] # Remove date column if it exists
+# 
+# 
+# # Perform the ADF test on each variable and extract the test statistic and p-value
+# adf_summary <- map_df(data_without_date, function(x) {
+#   adf_test <- ur.df(x, type = "none", lags = 1)
+#   adf_test_summary <- summary(adf_test)
+#   tibble(
+#     Test_statistic = adf_test_summary@teststat[1, 1],
+#     Critical_value= adf_test_summary@cval[1, 1]
+#   )
+# }, .id = "Variable")
+# 
+# # Add variable names to the summary table
+# adf_summary$Variable <- colnames(data_without_date)
+# 
+# # Display the ADF test summary table
+# adf_summary
 
 ```
 
@@ -349,30 +349,30 @@ As anticipated, macroeconomic data is typically non-stationary. The only excepti
 
 ```{r}
 # Define the number of rows and columns for the combined plot
-nrow <- 3
-ncol <- 3
-
-# Set up the combined plot grid
-par(mfrow = c(nrow, ncol))
-
-# Run the ACF and PACF functions for each variable and display the plots
-for (i in seq_along(data_without_date)) {
-  variable_name <- colnames(data_without_date)[i]
-  
-  # ACF plot
-  acf(data_without_date[[i]], main = paste("ACF of", variable_name))
-}
-
-# Reset the graphical parameters to default
-par(mfrow = c(nrow, ncol))
-
-# PACF plot
-for (i in seq_along(data_without_date)) {
-  variable_name <- colnames(data_without_date)[i]
-  
-  # PACF plot
-  pacf(data_without_date[[i]], main = paste("PACF of", variable_name))
-}
+# nrow <- 3
+# ncol <- 3
+# 
+# # Set up the combined plot grid
+# par(mfrow = c(nrow, ncol))
+# 
+# # Run the ACF and PACF functions for each variable and display the plots
+# for (i in seq_along(data_without_date)) {
+#   variable_name <- colnames(data_without_date)[i]
+#   
+#   # ACF plot
+#   acf(data_without_date[[i]], main = paste("ACF of", variable_name))
+# }
+# 
+# # Reset the graphical parameters to default
+# par(mfrow = c(nrow, ncol))
+# 
+# # PACF plot
+# for (i in seq_along(data_without_date)) {
+#   variable_name <- colnames(data_without_date)[i]
+#   
+#   # PACF plot
+#   pacf(data_without_date[[i]], main = paste("PACF of", variable_name))
+# }
 
 ```
 
