@@ -160,8 +160,6 @@ div.csl-indent {
   <li><a href="#gdp" id="toc-gdp" class="nav-link" data-scroll-target="#gdp">GDP</a></li>
   <li><a href="#exchange-rate" id="toc-exchange-rate" class="nav-link" data-scroll-target="#exchange-rate">Exchange rate</a></li>
   <li><a href="#trade-balance" id="toc-trade-balance" class="nav-link" data-scroll-target="#trade-balance">Trade balance</a></li>
-  <li><a href="#inflation" id="toc-inflation" class="nav-link" data-scroll-target="#inflation">Inflation</a></li>
-  <li><a href="#m3" id="toc-m3" class="nav-link" data-scroll-target="#m3">M3</a></li>
   <li><a href="#government-spending-data" id="toc-government-spending-data" class="nav-link" data-scroll-target="#government-spending-data">government spending data</a></li>
   </ul></li>
   <li><a href="#preliminary-data-analysis" id="toc-preliminary-data-analysis" class="nav-link" data-scroll-target="#preliminary-data-analysis">preliminary Data Analysis</a>
@@ -233,7 +231,7 @@ div.csl-indent {
 <p>For this study, quarterly data will be utilized for estimation purposes, as it is more reasonable to assume that government spending can respond within a given period. The primary focus of this research will be on the Australian economy, allowing for an in-depth analysis of its reaction to government spending shocks. It is important to note that the findings may not necessarily be applicable to other countries due to their distinct institutional features and economic attributes. Future research could extend the model to other nations in order to gain a broader understanding of cross-country variations in response to government spending shocks.</p>
 <p>Initially, I will load the packages that enable direct data downloads from the Reserve Bank of Australia <span class="citation" data-cites="rba2023statistics">(<a href="#ref-rba2023statistics" role="doc-biblioref">Australia 2023</a>)</span> and the Federal Reserve Bank of St.&nbsp;Louis <span class="citation" data-cites="FRED">(<a href="#ref-FRED" role="doc-biblioref">St. Louis Accessed: 5 April 2023</a>)</span>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readrba)</span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readabs)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readrba)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tseries)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
@@ -254,7 +252,7 @@ div.csl-indent {
 <p>In the model, the original consumption variable is log-transformed to reduce the scale and conform to the assumption of normality.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" class="quarto-discovered-preview-image img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" class="quarto-discovered-preview-image img-fluid" width="672"></p>
 </div>
 </div>
 </section>
@@ -264,7 +262,7 @@ div.csl-indent {
 <p>When examining the plot of the GDP percentage change, it appears to be more stationary over time. However, the data fluctuates significantly during the COVID period. In a later section, I also run ACF and PACF tests, which suggest that I should keep the original variable.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
@@ -273,7 +271,7 @@ div.csl-indent {
 <p>The real exchange rate data is sourced from the Reserve Bank of Australia (RBA) and is provided on a quarterly basis. RBA uses the Australian dollar trade-weighted index as a measure of the real exchange rate. This index represents the price of the Australian dollar in terms of a group of foreign currencies, based on their share of trade with Australia.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Additionally, I also investigate the nominal exchange rate variable. I download the AUD/USD exchange rate, as the US dollar is widely accepted as an international currency. (Note: The data obtained using the package may not exactly match the description on the website.) However, since the nominal exchange rate may be influenced by various factors and due to data availability constraints, this research will focus exclusively on the real interest rate (TWI).</p>
@@ -283,41 +281,19 @@ div.csl-indent {
 <p>The trade balance data is measured as a percentage of output and is recorded on a quarterly basis with seasonal adjustments. Upon examining the plot of this data, it appears to have been stationary before the COVID period. However, since then, the trade balance has been increasing. I will also include this variable in my model as a control variable.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-</section>
-<section id="inflation" class="level3">
-<h3 class="anchored" data-anchor-id="inflation">Inflation</h3>
-</section>
-<section id="m3" class="level3">
-<h3 class="anchored" data-anchor-id="m3">M3</h3>
 </section>
 <section id="government-spending-data" class="level3">
 <h3 class="anchored" data-anchor-id="government-spending-data">government spending data</h3>
-<p>Due to package constraints, readrba or readabs are not applicable for government spending data, as the data published about the public sector by ABS is yearly. Instead, I use FRED as my data source. Government spending is increasing due to the upward trend, so I use the lag() function to transform this data. I will keep the lof transformation of the original variable.</p>
+<p>I will keep the log transformation of the original variable.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>I also run the ADF test for this variable, and with a p-value of 0.5, we cannot reject the null hypothesis, indicating that the government spending data is expected to be non-stationary. For completeness, I also plot the ACF (autocorrelation function) and PACF (partial autocorrelation function). As shown in the ACF, there is a slow and gradual decay, suggesting that an autoregressive process might be suitable for the data. The PACF results also support using an AR model because the plot has a shorp cuf-off.</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-    Augmented Dickey-Fuller Test
-
-data:  gov_spending_australia$log_gov
-Dickey-Fuller = -2.1325, Lag order = 5, p-value = 0.5205
-alternative hypothesis: stationary</code></pre>
-</div>
-<div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-9-2.png" class="img-fluid" width="672"></p>
-</div>
-</div>
 </section>
 </section>
 <section id="preliminary-data-analysis" class="level2">
@@ -325,19 +301,18 @@ alternative hypothesis: stationary</code></pre>
 <p>In this section, I will present a table of the ADF test results for the remaining variables for completeness. As stated in the previous section, I will retain the log transformation of the original variable in my research. Additionally, the PACF and ACF tests suggest using an autoregression model. ### ADF test</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 10 × 3
-   Variable            Test_statistic Critical_value
-   &lt;chr&gt;                        &lt;dbl&gt;          &lt;dbl&gt;
- 1 consumption                  4.36           -2.58
- 2 consumption_growth          -3.19           -2.58
- 3 log_con                      6.44           -2.58
- 4 GDP                          6.14           -2.58
- 5 log_gdp                      7.24           -2.58
- 6 GDP_percentage              -6.30           -2.58
- 7 TWI                         -0.375          -2.58
- 8 Trade_balance               -2.06           -2.58
- 9 Quarterly_inflation         -2.17           -2.58
-10 M3                           6.79           -2.58</code></pre>
+<pre><code># A tibble: 9 × 3
+  Variable    Test_statistic Critical_value
+  &lt;chr&gt;                &lt;dbl&gt;          &lt;dbl&gt;
+1 consumption          5.34           -2.58
+2 realGDP              8.07           -2.58
+3 nomGDP               7.66           -2.58
+4 realTWI             -0.374          -2.58
+5 imports              2.59           -2.58
+6 exports              3.54           -2.58
+7 CPI                  6.55           -2.58
+8 M3                   8.39           -2.58
+9 gov_spend           13.3            -2.58</code></pre>
 </div>
 </div>
 <p>As anticipated, macroeconomic data is typically non-stationary. The only exception in this case is the real exchange rate, which is stationary.</p>
@@ -345,16 +320,10 @@ alternative hypothesis: stationary</code></pre>
 <h3 class="anchored" data-anchor-id="pacf-and-acf-test">PACF and ACF test</h3>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-11-2.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-11-3.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-11-4.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-10-2.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
@@ -364,13 +333,26 @@ alternative hypothesis: stationary</code></pre>
 <h1>3. The model</h1>
 <section id="model-specification" class="level2">
 <h2 class="anchored" data-anchor-id="model-specification">Model Specification</h2>
-<p>Using same notations in lecture, the model is specified as follows: <span class="math display">\[B_0 y_t = b_0 + B_1 y_{t-1}+ ... + B_p y_{t-p}+u_t\]</span> Then the empirical model for this study is a structural vector autoregression of the reduced form representation</p>
-<p><span class="math display">\[  \begin{bmatrix} \hat{g_t} \\   \hat{c_t} \\ \hat{y_t} \\ \hat{e}_t \\ \hat{i}_t  \\ \hat{m}_t \end{bmatrix} = A(L) \begin{bmatrix} \hat{g}_{t-1} \\   \hat{c}_{t-1} \\ \hat{y}_{t-1} \\ \hat{e}_{t-1} \\\hat{i}_{t-1  }\\ \hat{m}_{t-1} \end{bmatrix} + \varepsilon_t \]</span> Where:</p>
-<p><span class="math inline">\(g_t\)</span> denotes real government spending,</p>
-<p><span class="math inline">\(c_t\)</span> denotes household final consumption,</p>
-<p><span class="math inline">\(y_t\)</span> denotes real GDP,</p>
-<p><span class="math inline">\(e_t\)</span> denotes the real exchange rate (trade-weighted index), <span class="math inline">\(i_t\)</span> denotes the inflation, <span class="math inline">\(m_t\)</span> denotes the M3.</p>
-<p><span class="math inline">\(A(L)\)</span> is an nxn matrix polynomial in the lag operator L, representing the dynamic relationships among the endogenous variables,</p>
+<p>Where: The structural model is specified as follows: <span class="math display">\[\begin{align}
+B_0y_t &amp;= b_0 + B_1 y_{t-1} + \dots + B_p y_{t-p} + u_t\\
+u_{t}| Y_{t-1} &amp;\sim _{iid} ( 0, I_N)
+\end{align}\]</span></p>
+<p>Then the empirical model for this study is a structural vector autoregression of the reduced form representation:</p>
+<p><span class="math display">\[\begin{align}
+y_t &amp;= \mu_0 + A_1 y_{t-1} + \dots + A_p y_{t-p} + \varepsilon_t\\
+\text{where }B_0^{-1}u_t &amp;= \varepsilon_t| Y_{t-1} \sim _{iid} ( 0, \Sigma)\\
+\Sigma &amp;= B_0^{-1}B_0^{-1'}
+\end{align}\]</span></p>
+<p>Where:</p>
+<p><span class="math display">\[y_t=\begin{pmatrix}  govspend_t &amp;= \text{government spending}
+\\ consump_t  &amp;= \text{consumption}
+\\ realGDP_t  &amp;= \text{real GDP}
+\\ TWI_t  &amp;= \text{real exchange rate (trade-weighted index)}
+\\ CPI_t  &amp;= \text{consumer price index}
+\\ export_t  &amp;= \text{exports}
+\\ imports_t  &amp;= \text{imports}
+\\ M3_t  &amp;= \text{M3 money supply}
+\end{pmatrix}\]</span></p>
 <p><span class="math inline">\(\varepsilon_t\)</span> is a vector of the structural shocks at time t: <span class="math inline">\(\varepsilon_t = [\varepsilon_{g_t}, \varepsilon_{c_t}, \varepsilon_{y_t}, \varepsilon_{e_t}]^T\)</span>.</p>
 <p>Assumptions regarding the model’s error terms: <span class="math inline">\(\varepsilon_t |Y_{t-1} \sim iid(0_N, Σ)\)</span></p>
 </section>
