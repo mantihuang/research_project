@@ -274,20 +274,25 @@ plot8<- ggplot(data = growth_df, aes(x = Date, y =gov_spend_growth)) +
         axis.title = element_text(size = 14, face = "bold"),
         axis.text = element_text(size = 12),
         legend.position = "none")
+
 gov_plot <- plot_grid(plot7, plot8,  ncol = 1, align = "v")
 print(gov_plot)
-    ```
+
+```
     
-I also run the ADF test for this variable, and with a p-value of 0.5, we cannot reject the null hypothesis, indicating that the government spending data is expected to be non-stationary. For completeness, I also plot the ACF (autocorrelation function) and PACF (partial autocorrelation function). As shown in the ACF, there is a slow and gradual decay, suggesting that an autoregressive process might be suitable for the data. The PACF results also support using an AR model because the plot has a shorp cuf-off.
+I also run the ADF test for this variable, and with a p-value of 0.5, we cannot reject the null hypothesis, indicating that the government spending data is expected to be non-stationary. For completeness, I also plot the ACF (autocorrelation function) and PACF (partial autocorrelation function). As shown in the ACF, there is a slow and gradual decay, suggesting that an autoregressive process might be suitable for the data. The PACF results also support using an AR model because the plot has a sharp cut-off.
+
 ```{r}
 # adf.test(gov_spending_australia$log_gov)
 # test1 = acf(gov_spending_australia$log_gov)
 # test2 = pacf(gov_spending_australia$log_gov)
 ```
 
+
 ## preliminary Data Analysis
 
 In this section, I will present a table of the ADF test results for the remaining variables for completeness. As stated in the previous section, I will retain the log transformation of the original variable in my research. Additionally, the PACF and ACF tests suggest using an autoregression model.
+
 ### ADF test
  
 
@@ -405,10 +410,161 @@ I would expect the IRF for government spending to initially increase in response
 
 ## Basic Model
 First, I re-write the RF of the model as the following matrix notation:
-$\begin{align*}  Y = XA + E \end{align*}$
+$$\begin{align*}  Y = XA + E \\ \text{where} E|X \sim MN_{T \times N}(0_{T \times N},\Sigma,I_T)  \end{align*}$$
+
+Let $ L(A, \Sigma | Y, X)$ be the likelihood function given by:
 
 
-```{r}
+$$
+L(A, \Sigma | Y, X) \propto \det(\Sigma)^{-\frac{T}{2}} \exp \left\{-\frac{1}{2} \text{tr} \left[ \Sigma^{-1}(Y-XA)'(Y-XA) \right] \right\}
+$$
+
+
+We can further simplify it as:
+
+$$
+L(A, \Sigma | Y, X) \propto \det(\Sigma)^{-\frac{T}{2}} \exp \left\{-\frac{1}{2} \text{tr} \left[ \Sigma^{-1}(A-\hat{A})'X'X(A-\hat{A}) \right] \right\} \exp \left\{-\frac{1}{2} \text{tr} \left[\Sigma^{-1}(Y-X\hat{A})'(Y-X\hat{A}) \right] \right\}
+$$
+
+Let $L(A, \Sigma | Y, X)$ be the likelihood function given by:
+
+$$
+L(A, \Sigma | Y, X) \propto \det(\Sigma)^{-\frac{T}{2}} \exp \left\{-\frac{1}{2} \text{tr} \left[ \Sigma^{-1}(Y-XA)'(Y-XA) \right] \right\}
+$$
+
+We can further simplify it as:
+
+$$
+L(A, \Sigma | Y, X) \propto \det(\Sigma)^{-\frac{T}{2}} \exp \left\{-\frac{1}{2} \text{tr} \left[ \Sigma^{-1}(A-\hat{A})'X'X(A-\hat{A}) \right] \right\} \exp \left\{-\frac{1}{2} \text{tr} \left[\Sigma^{-1}(Y-X\hat{A})'(Y-X\hat{A}) \right] \right\}
+$$
+
+
+
+
+From Maximum Likelihood Estimation,
+
+$$
+\hat{A} = (X'X)^{-1}X'Y
+$$
+
+$$
+\hat{\Sigma} = \frac{1}{T} (Y-X \hat{A})'(Y-X \hat{A})
+$$
+
+
+The prior distribution is given by:
+
+$$
+p(A, \Sigma) = p(A|\Sigma) \cdot p(\Sigma)
+$$
+
+where:
+
+$$
+A|\Sigma \sim MN_{K \times N} (\underline{A}, \Sigma , \underline{V})
+$$
+
+$$
+\Sigma \sim IW_{N}(\underline{S},\underline{\nu})
+$$
+
+The parameters are defined as follows:
+
+$$
+\underline{A} = \begin{bmatrix} 0_{N \times 1} \\ I_N \\ 0_{N \times (p-1)N} \end{bmatrix}
+$$
+
+$$
+\text{Var}[vec(A)] = \Sigma \otimes \underline{V}
+$$
+
+$$
+\underline{V} = \text{diag}([\kappa_2 \quad \kappa_1 (p^{-2} \otimes I_N)])
+$$
+
+$$
+p = [1,2,...,p]
+$$
+
+
+The full conditional posterior is given by:
+
+$$
+p(A,\Sigma|Y,X) = p(A|Y,X,\Sigma) \cdot p(\Sigma|Y,X)
+$$
+
+where:
+
+$$
+p(A|Y,X,\Sigma) = MN_{K \times N}(\bar{A}, \Sigma, \bar{V})
+$$
+
+$$
+p(\Sigma | Y, X) = IW_N(\bar{S},\bar{\nu})
+$$
+
+We can derive the full conditional posterior as follows:
+
+$$
+P(A,\Sigma|Y,X) \propto L(A,\Sigma|Y,X) \cdot p(A,\Sigma)
+$$
+
+$$
+\propto L(A,\Sigma|Y,X) \cdot p(A|\Sigma) \cdot p(\Sigma)
+$$
+
+$$
+\propto \det(\Sigma)^{-\frac{T}{2}} \times \exp \left\{-\frac{1}{2} \text{tr} \left[ \Sigma^{-1}(A-\hat{A})' X'X (A-\hat{A})\right] \right\}
+$$
+
+$$
+\times \exp\left\{-\frac{1}{2}\text{tr} \left[ \Sigma^{-1}(Y-X\hat{A})'(Y-X\hat{A}) \right] \right\}
+$$
+
+$$
+\times \det(\Sigma)^{-\frac{N+K+\underline{\nu}+1}{2}}
+$$
+
+$$
+\times \exp\left\{-\frac{1}{2}\text{tr} \left[ \Sigma^{-1}(A-\underline{A})'\underline{V}^{-1}(A-\underline{A}) \right] \right\}
+$$
+
+$$
+\times \exp \left\{ -\frac{1}{2}\text{tr} \left[ \Sigma^{-1} \underline{S} \right] \right\}
+$$
+
+Simplifying further, we have:
+
+$$
+p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \times \exp \left\{-\frac{1}{2}\text{tr} \left[ \Sigma^{-1} \left[(A-\hat{A})^{'}X'X(A-\hat{A})+(A-\underline{A})^{'} \underline{V}^{-1}(A-\underline{A}) + (Y-X\hat{A})^{'}(Y-X\hat{A})+\underline{S}  \right]\right] \right\}
+$$
+
+$$
+\propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \times \exp\left\{ -\frac{1}{2}\text{tr} \left[ \Sigma^{-1} \left[ (A-\bar{A})^{'} \bar{V}^{-1} (A-\bar{A})+\underline{S} +Y^{'}Y + \underline{A}^{'} \underline{V}^{-1}\underline{A} -\bar{A}^{'} \bar{V}^{-1}\bar{A}\right]\right]\right\}
+$$
+
+where:
+
+$$
+\bar{V} = (X^{'}X+ \underline{V}^{-1})^{-1}
+$$
+
+$$
+\bar{A} = \bar{V}(X^{'}Y+\underline{V}^{-1} \underline{A})
+$$
+
+$$
+\bar{\nu} = T + \underline{\nu}
+$$
+
+$$
+\bar{S} = \underline{S} + Y^{'}Y +  A^{'}\underline{V}^{-1}\underline{A} - \bar{A}^{'}\bar{V}^{-1}\bar{A}
+$$
+
+Based on the derivation, the posterior function is 
+
+```{r, echo=TRUE}
+
 ## Function for drawing posterior distribution , based on lec 12
 
 Posterior <- function(Y, X, p, N, S) {
@@ -463,8 +619,8 @@ Posterior <- function(Y, X, p, N, S) {
 
 
 ```
-
-```{r}
+The sign restriction algorithm is based on lecture algorithm 2. For current project, it only restricts the impulse response function at time 0.
+```{r ,echo=TRUE}
 ### Impose sign restrictions based on Algorithm 2
 # SignRestrictions <- function(sign.restrictions,N,S,p,A.posterior,B.posterior,B1.posterior,Sigma.posterior){
 
@@ -570,11 +726,17 @@ for (s in 1:S){
 
 
 ## Extended model
-The extended model adopts the narrative sign restriction in (@antolin-diaz2018narrative). For current extension, restrictions on the Signs of the Structural Shocks is considered. 
+The extended model adopts the narrative sign restriction in (@antolin-diaz2018narrative). In this extension, the focus is on imposing restrictions on the signs of the Structural Shocks. The concept revolves around constraining the sign of specific structural shocks during a particular time period, guided by the narrative information.
+
+The posterior distribution is the same as the basic model. The difference is on the sign restriction. Based on the original sign restriction, the structural shocks for each period can be calculated by:
+
+$$\begin{align*} u_t = B_0 y_t - B_1 y_{t-1} - .. - b_0 \end{align*}$$
 
 
+Then we could put the restrictions on the sign of $u_t$.
 
-```{r}
+
+```{r, echo=TRUE}
 NarrativeSignRestrictions <- function(sign.restrictions,posterior,narrative.restrictions,Y,X){
   # posterior -   a list - estimation outcome from function Posterior
   
@@ -640,8 +802,11 @@ for (s in 1:S){
 ```
 
 
-## Simulations
-```{r echo=TRUE}
+
+## Simulations 
+This section aims to evaluate the code by generating artificial data consisting of 1000 observations simulated from a bivariate Gaussian random walk process. The covariance matrix of the process is set to be the 2x2 identity matrix. 
+
+```{r}
 ### Proof that your model can replicate the true parameters of the data-generating process.
 library(MASS) # for mvrnorm()
 
@@ -652,17 +817,14 @@ N <- 2
 S <- 50000
 
 # 1. Generate artificial data
-set.seed(42) # for reproducibility
+set.seed(2023) # for reproducibility
 cov_matrix <- diag(N)
 mean_vector <- rep(0, N)
 
 # Simulate bi-variate Gaussian random walk
-y <- matrix(NA, n_obs, N)
-y[1, ] <- mvrnorm(1, mean_vector, cov_matrix)
-
-for (i in 2:n_obs) {
-  y[i, ] <- y[i - 1, ] + mvrnorm(1, mean_vector, cov_matrix)
-}
+RW1 <- arima.sim(model= list(order = c(0, 1, 0)), n=1000, mean=0, sd=1)
+RW2 <- arima.sim(model= list(order = c(0, 1, 0)), n=1000, mean=0, sd=1)
+y = cbind(RW1,RW2) 
 
 y <- ts(y)
 
@@ -674,15 +836,37 @@ X <- matrix(1, nrow(Y), 1)
 for (i in 1:p) {
   X <- cbind(X, y[(p + 1 - i):(n_obs - i), ])
 }
+ploty = plot(y)
+print(ploty)
+
+```
+### Basic Model
+I first test my sign Restriction function with the simulated data. The sign restriction here is both positive. 
+| Restriction |  + | + |
+The A and $\Sigma$ is presented below, suggesting the basic model is working.
+
+The first row is close to zero, implying a zero constant.
+|      |    [,1] |   [,2] |
+|------|---------|--------|
+| [1,] |  0.0263 |  0.0528 |
+| [2,] |  1.0170 | -0.0010 |
+| [3,] | -0.0062 |  0.9410 |
 
 
+The matrix is close to identity matrix.
+|      |    [,1] |   [,2] |
+| [1,] |  0.9817 |  0.0000 |
+| [2,] |  0.0000 |  0.9824 |
+
+
+```{r, echo=FALSE}
 posterior <- Posterior(Y, X, p, N, S)
 
 
 
 ################### Apply Sign Restriction ########################
-sign.restrictions = c(1,1)
 
+sign.restrictions = c(1,1)
 Test.Restriction = SignRestrictions(sign.restrictions,posterior)
 
 B0.draws = Test.Restriction$B0.draws
@@ -692,20 +876,36 @@ B1.draws = Test.Restriction$B1.draws
 ###############################################
 A.check <- array(NA,c(N+1,N,S))
 S.check <- array(NA,c(N,N,S))
+
 for (s in 1:S){
   # convert Bo into Sigma 
   S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
   A.check[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
 }
-round(apply(A.check,1:2,mean),4)
-round(apply(S.check,1:2,mean),4)
+A = round(apply(A.check,1:2,mean),4)
+S = round(apply(S.check,1:2,mean),4)
 
 ```
 
+### Extended model
+For this section, I assume the the sign of the structural shocks for period period 65 to period 67 is negative, which is also consistent with the original sign restriction. The parameter values for A and $\sigma$ suggests the function is working well.
+|      |    [,1] |   [,2] |
+|------|---------|--------|
+| [1,] |  0.0259 |  0.0530 |
+| [2,] |  1.0168 | -0.0012 |
+| [3,] | -0.0064 |  0.9407 |
 
-```{r}
+
+This is close to identity matrix.
+|      |    [,1] |   [,2] |
+|------|---------|--------|
+| [1,] |  0.9762 |  0.0001 |
+| [2,] |  0.0001 |  0.9873 |
+
+
+```{r, echo=FALSE}
 ######## Narrative sign 
-narrative.restrictions = c(2:5)
+narrative.restrictions = c(65:67)
 Narrative.Restriction = NarrativeSignRestrictions(sign.restrictions,posterior,narrative.restrictions,Y,X)
 
 B0.draws = Narrative.Restriction$B0.draws
@@ -715,13 +915,17 @@ B1.draws = Narrative.Restriction$B1.draws
 ###############################################
 A.check <- array(NA,c(N+1,N,S))
 S.check <- array(NA,c(N,N,S))
+
+
+
 for (s in 1:S){
   # convert Bo into Sigma 
   S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
   A.check[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
 }
-round(apply(A.check,1:2,mean),4)
-round(apply(S.check,1:2,mean),4)
+
+A = round(apply(A.check,1:2,mean),4)
+S = round(apply(S.check,1:2,mean),4)
 
 ```
 
@@ -736,5 +940,5 @@ round(apply(S.check,1:2,mean),4)
 #test = NarrativeRestrictions(sign.restrictions, N, S, p, Basic_A.posterior, Basic_B.posterior, Basic_B1.posterior, Basic_Sigma.posterior, narrative_restrictions)
 ```
 
-# Empirical Estimation
+# 5.Empirical Estimation
 ## References {.unnumbered}
