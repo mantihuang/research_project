@@ -783,6 +783,7 @@ for (s in 1:S){
     u= u[,1]
     check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0  ) # Check reponse at time 0
     check_narrative = prod(sign(u[narrative.restrictions]) > 0)
+    
     if (check == 1 && check_narrative == 1) {
         sign.restrictions.do.not.hold = FALSE
     }
@@ -808,10 +809,10 @@ This section aims to evaluate the code by generating artificial data consisting 
 
 ```{r}
 ### Proof that your model can replicate the true parameters of the data-generating process.
-library(MASS) # for mvrnorm()
+
 
 # Set parameters
-n_obs <- 1000
+n_obs = 1000
 p <- 1
 N <- 2
 S <- 50000
@@ -836,8 +837,8 @@ X <- matrix(1, nrow(Y), 1)
 for (i in 1:p) {
   X <- cbind(X, y[(p + 1 - i):(n_obs - i), ])
 }
-ploty = plot(y)
-print(ploty)
+plot(y)
+
 
 ```
 ### Basic Model
@@ -845,21 +846,16 @@ I first test my sign Restriction function with the simulated data. The sign rest
 | Restriction |  + | + |
 The A and $\Sigma$ is presented below, suggesting the basic model is working.
 
-The first row is close to zero, implying a zero constant.
-|      |    [,1] |   [,2] |
-|------|---------|--------|
-| [1,] |  0.0263 |  0.0528 |
-| [2,] |  1.0170 | -0.0010 |
-| [3,] | -0.0062 |  0.9410 |
+The first row of A is close to zero, implying a zero constant and the matrix is close to identity matrix.
 
 
-The matrix is close to identity matrix.
-|      |    [,1] |   [,2] |
-| [1,] |  0.9817 |  0.0000 |
-| [2,] |  0.0000 |  0.9824 |
 
 
-```{r, echo=FALSE}
+
+
+
+
+```{r, echo=TRUE}
 posterior <- Posterior(Y, X, p, N, S)
 
 
@@ -882,30 +878,22 @@ for (s in 1:S){
   S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
   A.check[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
 }
-A = round(apply(A.check,1:2,mean),4)
-S = round(apply(S.check,1:2,mean),4)
+Acheck=round(apply(A.check,1:2,mean),4)
+Scheck =round(apply(S.check,1:2,mean),4)
 
+Acheck
+Scheck
 ```
 
 ### Extended model
 For this section, I assume the the sign of the structural shocks for period period 65 to period 67 is negative, which is also consistent with the original sign restriction. The parameter values for A and $\sigma$ suggests the function is working well.
-|      |    [,1] |   [,2] |
-|------|---------|--------|
-| [1,] |  0.0259 |  0.0530 |
-| [2,] |  1.0168 | -0.0012 |
-| [3,] | -0.0064 |  0.9407 |
 
 
-This is close to identity matrix.
-|      |    [,1] |   [,2] |
-|------|---------|--------|
-| [1,] |  0.9762 |  0.0001 |
-| [2,] |  0.0001 |  0.9873 |
 
-
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 ######## Narrative sign 
 narrative.restrictions = c(65:67)
+
 Narrative.Restriction = NarrativeSignRestrictions(sign.restrictions,posterior,narrative.restrictions,Y,X)
 
 B0.draws = Narrative.Restriction$B0.draws
@@ -913,20 +901,22 @@ B1.draws = Narrative.Restriction$B1.draws
 
 
 ###############################################
-A.check <- array(NA,c(N+1,N,S))
-S.check <- array(NA,c(N,N,S))
+AN.check <- array(NA,c(N+1,N,S))
+SN.check <- array(NA,c(N,N,S))
 
 
 
 for (s in 1:S){
   # convert Bo into Sigma 
-  S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
-  A.check[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
+  SN.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
+  AN.check[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
 }
 
-A = round(apply(A.check,1:2,mean),4)
-S = round(apply(S.check,1:2,mean),4)
+AN = round(apply(A.check,1:2,mean),4)
+SN = round(apply(S.check,1:2,mean),4)
 
+AN
+SN
 ```
 
 ```{r example}
