@@ -402,6 +402,12 @@ I would expect the IRF for government spending to initially increase in response
 
 
 # 4. Modelling Framework
+
+## Basic Model
+First, I re-write the RF of the model as the following matrix notation:
+$\begin{align*}  Y = XA + E \end{align*}$
+
+
 ```{r}
 ## Function for drawing posterior distribution , based on lec 12
 
@@ -460,46 +466,182 @@ Posterior <- function(Y, X, p, N, S) {
 
 ```{r}
 ### Impose sign restrictions based on Algorithm 2
-SignRestrictions <- function(sign.restrictions,N,S,p,A.posterior,B.posterior,B1.posterior,Sigma.posterior){
-R1            = diag(sign.restrictions)
-B0.draws      = array(NA,c(N,N,S))
-B1.draws      = array(NA,c(N,(1+N*p),S))
+# SignRestrictions <- function(sign.restrictions,N,S,p,A.posterior,B.posterior,B1.posterior,Sigma.posterior){
 
+SignRestrictions <- function(sign.restrictions,posterior){
+  # posterior -   a list - estimation outcome from function Posterior
+  
+  
+  A.posterior   = posterior$A.posterior
+  B.posterior = posterior$B.posterior
+  B1.posterior = posterior$B1.posterior
+  Sigma.posterior = posterior$Sigma.posterior
+  
+  S = dim(A.posterior)[3]
+  N = dim(B.posterior)[1]
+  p = (dim(B1.posterior)[2]-1)/N
+   
+  
+  R1            = diag(sign.restrictions)
+  B0.draws      = array(NA,c(N,N,S))
+  B1.draws      = array(NA,c(N,(1+N*p),S))
+  pb = txtProgressBar(min = 0, max = S, initial = 0)
 for (s in 1:S){
+  
+  setTxtProgressBar(pb, s)
+  
   B0.tilde <-B.posterior[,,s]
   B1.tilde <-  B1.posterior[,,s]
   A <- A.posterior[,,s]
   Sigma <- Sigma.posterior[,,s]
   
   sign.restrictions.do.not.hold = TRUE
+  narrative.restriction.do.not.hold = TRUE
   i=1
-while (sign.restrictions.do.not.hold){
-  X           = matrix(rnorm(N*N),N,N)
-  QR          = qr(X, tol = 1e-10)
-  Q           = qr.Q(QR,complete=TRUE)
-  R           = qr.R(QR,complete=TRUE)
-  Q           = t(Q %*% diag(sign(diag(R))))
-  B0          = Q%*%B0.tilde 
-  B1          = Q%*%B1.tilde 
-  B0.inv      = solve(B0) 
-  check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0) # Check reponse at time 0
-
-
-  if (check==1){sign.restrictions.do.not.hold=FALSE}
-  i=i+1
-}
+  
+  while (sign.restrictions.do.not.hold){
+    X           = matrix(rnorm(N*N),N,N)
+    QR          = qr(X, tol = 1e-10)
+    Q           = qr.Q(QR,complete=TRUE)
+    R           = qr.R(QR,complete=TRUE)
+    Q           = t(Q %*% diag(sign(diag(R))))
+    B0          = Q%*%B0.tilde 
+    B0.inv      = solve(B0) 
+    check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0) # Check reponse at time 0
+    
+    
+    if (check==1){sign.restrictions.do.not.hold=FALSE}
+    i=i+1
+  }
+  B1            = Q%*%B1.tilde 
   B0.draws[,,s] = B0
   B1.draws[,,s] = B1
+
 }
 
-
   return (list(B0.draws = B0.draws,
-               B1.draws = B1.draws))
+               B1.draws = B1.draws,
+               i        = i))
 }
 ```
 
-## Simulations
+
+
+
+
 ```{r}
+# Posterios for basic model
+#####################################################
+# 
+# p = 4 # time lagt0  
+# N = 8
+# S = 100
+# 
+# # Create Y and X
+# y = ts(df[, !names(df) %in% c("Date","nomGDP")])
+# Y = y[5:211,]
+# X       = matrix(1,nrow(Y),1)
+# for (i in 1:p){
+#   X     = cbind(X,y[5:211-i,])
+# }
+# results <- Posterior(Y, X, p, N, S)
+# 
+# 
+# # Sign.restriction######## 
+# ############################################################
+# set.seed(123456)
+# sign.restrictions <- c(1,1,1,1,1,1,1,1)
+# 
+# 
+# ################### Apply Sign Restriction ########################
+# 
+# Basic.Restriction = SignRestrictions(sign.restrictions,results)
+# 
+# B0.draws = Basic.Restriction$B0.draws
+# B1.draws = Basic.Restriction$B1.draws
+# 
+# 
+# ###############################################
+# 
+# 
+
+
+```
+
+
+## Extended model
+The extended model adopts the narrative sign restriction in (@antolin-diaz2018narrative). For current extension, restrictions on the Signs of the Structural Shocks is considered. 
+
+
+
+```{r}
+NarrativeSignRestrictions <- function(sign.restrictions,posterior,narrative.restrictions,Y,X){
+  # posterior -   a list - estimation outcome from function Posterior
+  
+  
+  A.posterior   = posterior$A.posterior
+  B.posterior = posterior$B.posterior
+  B1.posterior = posterior$B1.posterior
+  Sigma.posterior = posterior$Sigma.posterior
+  YY = Y
+  XX = X
+  
+  S = dim(A.posterior)[3]
+  N = dim(B.posterior)[1]
+  p = (dim(B1.posterior)[2]-1)/N
+   
+  
+  R1            = diag(sign.restrictions)
+  B0.draws      = array(NA,c(N,N,S))
+  B1.draws      = array(NA,c(N,(1+N*p),S))
+  pb = txtProgressBar(min = 0, max = S, initial = 0)
+for (s in 1:S){
+  
+  setTxtProgressBar(pb, s)
+  
+  B0.tilde <-B.posterior[,,s]
+  B1.tilde <-  B1.posterior[,,s]
+  A <- A.posterior[,,s]
+  Sigma <- Sigma.posterior[,,s]
+  
+  sign.restrictions.do.not.hold = TRUE
+  narrative.restriction.do.not.hold = TRUE
+  i=1
+  
+  while (sign.restrictions.do.not.hold){
+    X           = matrix(rnorm(N*N),N,N)
+    QR          = qr(X, tol = 1e-10)
+    Q           = qr.Q(QR,complete=TRUE)
+    R           = qr.R(QR,complete=TRUE)
+    Q           = t(Q %*% diag(sign(diag(R))))
+    B0          = Q%*%B0.tilde 
+    B0.inv      = solve(B0) 
+    B1          = Q%*%B1.tilde 
+    u = YY %*% t(B0) - XX %*% t(B1)
+    u= u[,1]
+    check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0  ) # Check reponse at time 0
+    check_narrative = prod(sign(u[narrative.restrictions]) > 0)
+    if (check == 1 && check_narrative == 1) {
+        sign.restrictions.do.not.hold = FALSE
+    }
+    i = i + 1
+    B0.draws[, , s] = B0
+    B1.draws[, , s] = B1
+  }
+  
+  close(pb)
+
+}
+
+  return (list(B0.draws = B0.draws,
+               B1.draws = B1.draws,
+               i        = i))
+}
+```
+
+
+## Simulations
+```{r echo=TRUE}
 ### Proof that your model can replicate the true parameters of the data-generating process.
 library(MASS) # for mvrnorm()
 
@@ -522,7 +664,6 @@ for (i in 2:n_obs) {
   y[i, ] <- y[i - 1, ] + mvrnorm(1, mean_vector, cov_matrix)
 }
 
-# Convert to time series
 y <- ts(y)
 
 # 2. Estimate the model
@@ -535,17 +676,14 @@ for (i in 1:p) {
 }
 
 
-results <- Posterior(Y, X, p, N, S)
-A.posterior <- results$A.posterior
-Sigma.posterior <- results$Sigma.posterior
-B.posterior <- results$B.posterior
-B1.posterior <- results$B1.posterior
+posterior <- Posterior(Y, X, p, N, S)
+
 
 
 ################### Apply Sign Restriction ########################
-sign.restrictions = c(-1,1)
+sign.restrictions = c(1,1)
 
-Test.Restriction = SignRestrictions(sign.restrictions,N,S,p,A.posterior,B.posterior,B1.posterior,Sigma.posterior)
+Test.Restriction = SignRestrictions(sign.restrictions,posterior)
 
 B0.draws = Test.Restriction$B0.draws
 B1.draws = Test.Restriction$B1.draws
@@ -562,92 +700,41 @@ for (s in 1:S){
 round(apply(A.check,1:2,mean),4)
 round(apply(S.check,1:2,mean),4)
 
-
-
-
 ```
 
 
-
-## The basic model
-The following sign restrictions are associated with government spending shocks.
-1. A positive government spending shock increases government spending, consumption, real GDP, and consumer price index.
-2. A positive consumption shock increases consumption, real GDP, and consumer price index.
-3. A positive real GDP shock increases government spending, consumption, real GDP, and consumer price index.
-4. A positive real exchange rate shock increases the trade-weighted index and exports, and decreases imports.
-5. A positive consumer price index shock increases the consumer price index and decreases the real exchange rate.
-6. A positive export shock increases exports and real GDP.
-7. A positive import shock increases imports and decreases real GDP.
-8. A positive M3 money supply shock increases M3 money supply and consumer price index.
-### Sign Restrictions
-
-|                           | Government Spending | Consumption | Real GDP | Consumer Price Index | Trade-Weighted Index | Exports | Imports | M3 Money Supply |
-|---------------------------|---------------------|-------------|----------|----------------------|----------------------|---------|---------|-----------------|
-| Government Spending Shock | +                   | +           | +        | +                    |                      |         |         |                 |
-| Consumption Shock         |                     | +           | +        | +                    |                      |         |         |                 |
-| Real GDP Shock            | +                   | +           | +        | +                    |                      |         |         |                 |
-| Real Exchange Rate Shock  |                     |             |          |                      | +                    | +       | -       |                 |
-| Consumer Price Index Shock|                     |             |          | +                    |                      |         |         |                 |
-| Export Shock              |                     |             | +        |                      |                      | +       |         |                 |
-| Import Shock              |                     |             | -        |                      |                      |         | +       |                 |
-| M3 Money Supply Shock     |                     |             |          | +                    |                      |         |         | +               |
-
 ```{r}
-# Posterios for basic model
-#####################################################
+######## Narrative sign 
+narrative.restrictions = c(2:5)
+Narrative.Restriction = NarrativeSignRestrictions(sign.restrictions,posterior,narrative.restrictions,Y,X)
 
-p = 4 # time lagt0  
-N = 8
-S = 50000
-
-# Create Y and X
-y = ts(df[, !names(df) %in% c("Date","nomGDP")])
-Y = y[5:211,]
-X       = matrix(1,nrow(Y),1)
-for (i in 1:p){
-  X     = cbind(X,y[5:211-i,])
-}
-results <- Posterior(Y, X, p, N, S)
-Basic_A.posterior <- results$A.posterior
-Basic_Sigma.posterior <- results$Sigma.posterior
-Basic_B.posterior <- results$B.posterior
-Basic_B1.posterior <- results$B1.posterior
-
-# Sign.restriction######## 
-############################################################
-set.seed(123456)
-sign.restrictions <- matrix(c( 1,  1,  1,  0,  1,  0,  0,  0,
-                               0,  1,  1,  0,  1,  0,  0,  0,
-                               0,  0,  1,  0,  0,  0,  0,  0,
-                               0,  0,  0,  1, -1,  0,  0,  0,
-                               0,  0,  0,  0,  1,  0,  0,  0,
-                               0,  0,  0,  0,  0,  1,  0,  0,
-                               0,  0, -1,  0,  0,  0,  1,  0,
-                               0,  0,  0,  0,  0,  0,  0,  1), nrow=8, byrow=TRUE)
-
-
-################### Apply Sign Restriction ########################
-## sign.restrictions = c(-1,1) 
-
-Basic.Restriction = SignRestrictions(sign.restrictions,N,S,p,Basic_A.posterior,Basic_B.posterior,Basic_B1.posterior,Basic_Sigma.posterior)
-
-B0.draws = Basic.Restriction$B0.draws
-B1.draws = Basic.Restriction$B1.draws
+B0.draws = Narrative.Restriction$B0.draws
+B1.draws = Narrative.Restriction$B1.draws
 
 
 ###############################################
-
-
-
+A.check <- array(NA,c(N+1,N,S))
+S.check <- array(NA,c(N,N,S))
+for (s in 1:S){
+  # convert Bo into Sigma 
+  S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
+  A.check[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
+}
+round(apply(A.check,1:2,mean),4)
+round(apply(S.check,1:2,mean),4)
 
 ```
 
+```{r example}
+#narrative_restrictions <- matrix(NA, nrow = length(df$Date), ncol = 8)
 
-## Extended model
+# Government Spending Shock
+#narrative_restrictions[c(50, 150), 1] <- 1  # Positive shock at episodes 50 and 150
+#narrative_restrictions[100, 1] <- -1        # Negative shock at episode 100
+
+# Apply NarrativeRestrictions function
+#test = NarrativeRestrictions(sign.restrictions, N, S, p, Basic_A.posterior, Basic_B.posterior, Basic_B1.posterior, Basic_Sigma.posterior, narrative_restrictions)
+```
 
 # Empirical Estimation
-
-```{r}
-
-```
 ## References {.unnumbered}
