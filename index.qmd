@@ -16,6 +16,7 @@ bibliography: references.bib
 
 Please note that the website https://www.rba.gov.au/statistics/tables/ may sometimes be unstable and unable to load. Therefore, you may encounter errors such as "Could not read HTML at https://www.rba.gov.au/statistics/tables/" when using read_rba() in R.
 
+**TW:** This occurs most likely bc you are downloading the data from the RBA from the uni and with the uni IP. And since many of your peers do so as well, the RBA is blocking the uni IP machines. I am using a safe and private VPN service and I have never seen such a message :)
 
 # 1. The question objective, and motivation
 
