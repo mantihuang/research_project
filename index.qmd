@@ -308,6 +308,8 @@ df_data_frame <- as.data.frame(df)[, -which(colnames(df) == "Date")]
 
 
 # Perform the ADF test on each variable and extract the test statistic and p-value
+
+# this procedure below is nicely coded! But using 1 lag for all the variables is not good. Better too high a lag number than too small. Stationarity of the TWI is most likely only the effect of too few lags used.
 adf_summary <- map_df(df_data_frame , function(x) {
   adf_test <- ur.df(x, type = "none", lags = 1)
   adf_test_summary <- summary(adf_test)
