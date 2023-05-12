@@ -321,8 +321,7 @@ adf_summary <- map_df(df_data_frame , function(x) {
 adf_summary$Variable <- colnames(df_data_frame )
 
 # Display the ADF test summary table
-adf_summary
-
+knitr::kable(adf_summary, digits = 3)
 
 ```
 
