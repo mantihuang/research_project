@@ -319,6 +319,17 @@ adf_summary <- map_df(df_data_frame , function(x) {
   )
 }, .id = "Variable")
 
+# Perform the test for the first differences to determine the integration order and report in one table please
+adf_diff_summary <- map_df(diff(df_data_frame) , function(x) {
+  adf_test <- ur.df(x, type = "none", lags = 1)
+  adf_test_summary <- summary(adf_test)
+  tibble(
+    Test_statistic = adf_test_summary@teststat[1, 1],
+    Critical_value= adf_test_summary@cval[1, 1]
+  )
+}, .id = "Variable")
+
+
 # Add variable names to the summary table
 adf_summary$Variable <- colnames(df_data_frame )
 
