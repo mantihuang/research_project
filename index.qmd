@@ -320,14 +320,8 @@ adf_summary <- map_df(df_data_frame , function(x) {
 }, .id = "Variable")
 
 # Perform the test for the first differences to determine the integration order and report in one table please
-adf_diff_summary <- map_df(diff(df_data_frame) , function(x) {
-  adf_test <- ur.df(x, type = "none", lags = 1)
-  adf_test_summary <- summary(adf_test)
-  tibble(
-    Test_statistic = adf_test_summary@teststat[1, 1],
-    Critical_value= adf_test_summary@cval[1, 1]
-  )
-}, .id = "Variable")
+
+
 
 
 # Add variable names to the summary table
@@ -943,5 +937,159 @@ SN
 #test = NarrativeRestrictions(sign.restrictions, N, S, p, Basic_A.posterior, Basic_B.posterior, Basic_B1.posterior, Basic_Sigma.posterior, narrative_restrictions)
 ```
 
-# 5.Empirical Estimation
+
+
+
+# 5. Empirical Estimation
+For basic model, I drop the variable exports and imports because the effect of government spending shock on these two variables are unclear.
+$$y_t=\begin{pmatrix}  govspend_t &= \text{government spending}
+\\ consump_t  &= \text{consumption}
+\\ realGDP_t  &= \text{real GDP}
+\\ TWI_t  &= \text{real exchange rate (trade-weighted index)}
+\\ CPI_t  &= \text{consumer price index}
+\\ M3_t  &= \text{M3 money supply}
+\end{pmatrix}$$
+
+Sign Restrictions are given as the following:
+
+1. Government spending: A positive government spending shock increases government spending (govspend).
+
+2. Consumption:  Generally, a positive government spending shock could potentially increase consumption. This is due to the multiplier effect. As the government spends more, this increases income for businesses and households, which can then lead to higher consumption. 
+
+3. Real GDP: A positive government spending shock is typically expected to increase real GDP, at least in the short term. Government spending is a component of GDP (which is the sum of consumption, investment, government spending, and net exports). Therefore, if government spending increases, all else being equal, real GDP should also increase.
+
+4. Real exchange rate: Generally, if the increase in government spending leads to higher interest rates, it could appreciate the real exchange rate as it attracts foreign investors seeking higher returns.
+
+5. Consumer price index: By @jorgensen2022inflation, prices do not increase in response to a positive government spending shock. 
+
+6. M3 money supply: Since the government financed its spending through borrowing, this could increase the money supply.
+
+
+```{r, echo=FALSE}
+library(HDInterval)
+set.seed(123456)
+########IRF
+p = 5 # time lagt0
+N = 6
+S = 100
+
+# Create Y and X
+y = ts(df[, !names(df) %in% c("Date","nomGDP","imports","exports")])
+Y = y[(p+1):211,]
+X       = matrix(1,nrow(Y),1)
+for (i in 1:p){
+  X     = cbind(X,y[(p+1):211-i,])
+}
+results = Posterior(Y,X,p,N,S)
+Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,1,-1,1,1), results)
+
+
+
+##################### Results from the Sign_restriction ###################
+
+B0.draws = Sign_restritions$B0.draws
+B1.draws = Sign_restritions$B1.draws
+
+
+A.posterior <- array(NA,c(N*p+1,N,S))
+B.posterior       = array(NA,c(N,N,S))
+S.check <- array(NA,c(N,N,S))
+for (s in 1:S){
+  # convert to into A and B
+  S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
+  cholSigma.s     = chol(S.check[,,s])
+  B.posterior[,,s]= t(cholSigma.s)
+  A.posterior[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
+}
+
+############################### From the porsterior distribution#########
+#A.posterior = results$A.posterior
+#.posterior = results$B.posterior
+
+
+########https://www.sciencedirect.com/science/article/pii/S0014292121002634#####
+
+
+h = 8
+
+
+
+IRF.posterior     = array(NA,c(N,N,h+1,S))
+IRF.inf.posterior = array(NA,c(N,N,S))
+FEVD.posterior    = array(NA,c(N,N,h+1,S))
+J                 = cbind(diag(N),matrix(0,N,N*(p-1)))
+
+for (s in 1:S){
+  A.bold          = rbind(t(A.posterior[2:(1+N*p),,s]),cbind(diag(N*(p-1)),matrix(0,N*(p-1),N)))
+  IRF.inf.posterior[,,s]          = J %*% solve(diag(N*p)-A.bold) %*% t(J) %*% B.posterior[,,s]
+  
+  A.bold.power    = A.bold
+  for (i in 1:(h+1)){
+    if (i==1){
+      IRF.posterior[,,i,s]        = B.posterior[,,s]
+    } else {
+      IRF.posterior[,,i,s]        = J %*% A.bold.power %*% t(J) %*% IRF.posterior[,,i-1,s]
+      A.bold.power                = A.bold.power %*% A.bold
+    }
+    for (n in 1:N){
+      for (nn in 1:N){
+        FEVD.posterior[n,nn,i,s]  = sum(IRF.posterior[n,nn,1:i,s]^2)
+      }
+    }
+    FEVD.posterior[,,i,s]         = diag(1/apply(FEVD.posterior[,,i,s],1,sum))%*%FEVD.posterior[,,i,s]
+  }
+}
+FEVD.posterior    = 100*FEVD.posterior
+
+
+# save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k002.RData")
+save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k1.RData")
+
+# Define colors
+mcxs1  = "#05386B"
+mcxs2  = "#379683"
+mcxs3  = "#5CDB95"
+mcxs4  = "#8EE4AF"
+mcxs5  = "#EDF5E1"
+purple = "#b02442"
+mcxs1.rgb   = col2rgb(mcxs1)
+mcxs1.shade1= rgb(mcxs1.rgb[1],mcxs1.rgb[2],mcxs1.rgb[3], alpha=120, maxColorValue=255)
+mcxs2.rgb   = col2rgb(mcxs2)
+mcxs2.shade1= rgb(mcxs2.rgb[1],mcxs2.rgb[2],mcxs2.rgb[3], alpha=120, maxColorValue=255)
+
+# Plots of responses to domestic monetary policy shock
+############################################################
+load("irf-fevd-k1.RData")
+IRFs.k1           = apply(IRF.posterior[,1,,],1:2,mean) 
+
+######1st shock is government  spending shock
+
+IRFs.inf.k1       = apply(IRF.inf.posterior[,1,],1,mean)
+rownames(IRFs.k1) = colnames(Y)
+
+IRFs.k1.hdi    = apply(IRF.posterior[,1,,],1:2,hdi, credMass=0.68)
+hh          = 1:9
+
+
+par(mfrow=c(3,2), mar=c(4,4.5,2,2),cex.axis=1.5, cex.lab=1.5)
+for (n in 1:6){
+  ylims     = range(IRFs.k1[n,hh],IRFs.k1.hdi[,n,hh])
+  plot(hh,IRFs.k1[n,hh], type="l", ylim=ylims, axes=FALSE, xlab="", ylab=rownames(IRFs.k1)[n])
+  if (n==5 | n==6){
+    axis(1,c(1,2,5,9),c("","1 quarter","1 year","2 years"))
+  } else {
+    axis(1,c(1,2,5,9),c("","","",""))
+  }
+  axis(2,c(ylims[1],0,ylims[2]),round(c(ylims[1],0,ylims[2]),3))
+  polygon(c(hh,(h+1):1), c(IRFs.k1.hdi[1,n,hh],IRFs.k1.hdi[2,n,(h+1):1]), col=mcxs1.shade1,border=mcxs1.shade1)
+  abline(h=0)
+  lines(hh, IRFs.k1[n,hh],lwd=2,col=mcxs1)
+}
+
+
+
+
+```
 ## References {.unnumbered}
+
+
