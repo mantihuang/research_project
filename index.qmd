@@ -573,8 +573,9 @@ Based on the derivation, the posterior function is
 ```{r, echo=TRUE}
 
 ## Function for drawing posterior distribution , based on lec 12
+kappa.1 = 1
 
-Posterior <- function(Y, X, p, N, S) {
+Posterior <- function(Y, X, p, N, S,kappa.1) {
   # MLE
   ############################################################
   A.hat       = solve(t(X)%*%X)%*%t(X)%*%Y
@@ -585,7 +586,7 @@ Posterior <- function(Y, X, p, N, S) {
   
   # prior distribution
   ############################################################
-  kappa.1     = 0.01
+  kappa.1     = kappa.1
   kappa.2     = 100
   kappa.3     = 1
   A.prior     = matrix(0,nrow(A.hat),ncol(A.hat))
@@ -863,7 +864,7 @@ The first row of A is close to zero, implying a zero constant and the matrix is 
 
 
 ```{r, echo=TRUE}
-posterior <- Posterior(Y, X, p, N, S)
+posterior <- Posterior(Y, X, p, N, S,kappa.1)
 
 
 
@@ -980,7 +981,8 @@ X       = matrix(1,nrow(Y),1)
 for (i in 1:p){
   X     = cbind(X,y[(p+1):211-i,])
 }
-results = Posterior(Y,X,p,N,S)
+
+results = Posterior(Y,X,p,N,S,0.0000000000000001)
 Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,1,-1,1,1), results)
 
 
@@ -1004,7 +1006,7 @@ for (s in 1:S){
 
 ############################### From the porsterior distribution#########
 #A.posterior = results$A.posterior
-#.posterior = results$B.posterior
+#B.posterior = results$B.posterior
 
 
 ########https://www.sciencedirect.com/science/article/pii/S0014292121002634#####
@@ -1087,9 +1089,8 @@ for (n in 1:6){
 }
 
 
-
-
 ```
 ## References {.unnumbered}
+
 
 
