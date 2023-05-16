@@ -585,7 +585,7 @@ Posterior <- function(Y, X, p, N, S) {
   
   # prior distribution
   ############################################################
-  kappa.1     = 1^2
+  kappa.1     = 0.01
   kappa.2     = 100
   kappa.3     = 1
   A.prior     = matrix(0,nrow(A.hat),ncol(A.hat))
