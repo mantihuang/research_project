@@ -16,7 +16,7 @@ bibliography: references.bib
 
 Please note that the website https://www.rba.gov.au/statistics/tables/ may sometimes be unstable and unable to load. Therefore, you may encounter errors such as "Could not read HTML at https://www.rba.gov.au/statistics/tables/" when using read_rba() in R.
 
-**TW:** This occurs most likely bc you are downloading the data from the RBA from the uni and with the uni IP. And since many of your peers do so as well, the RBA is blocking the uni IP machines. I am using a safe and private VPN service and I have never seen such a message :)
+
 
 # 1. The question objective, and motivation
 
@@ -232,7 +232,7 @@ Additionally, I also investigate the nominal exchange rate variable. I download 
 
 ### Trade balance
 
-The trade balance data is measured as a percentage of output and is recorded on a quarterly basis with seasonal adjustments. Upon examining the plot of this data, it appears to have been stationary before the COVID period. However, since then, the trade balance has been increasing. I will also include this variable in my model as a control variable.
+The trade balance data is calculated by taking the difference between exports and imports.
 
 
 ```{r}
@@ -337,31 +337,30 @@ As anticipated, macroeconomic data is typically non-stationary. The only excepti
 ### PACF and ACF test
 
 ```{r}
-# Define the number of rows and columns for the combined plot
 nrow <- 3
 ncol <- 3
 
-# Set up the combined plot grid
-par(mfrow = c(nrow, ncol))
+# Set up the combined plot grid and adjust margins
+par(mfrow = c(nrow, ncol), mar = c(3, 3, 1, 1))
 
-# Run the ACF and PACF functions for each variable and display the plots
-for (i in seq_along(df_data_frame )) {
-  variable_name <- colnames(df_data_frame )[i]
-
-  # ACF plot
-  acf(df_data_frame [[i]], main = paste("ACF of", variable_name))
+# ACF plot
+for (i in seq_along(df_data_frame)) {
+  variable_name <- colnames(df_data_frame)[i]
+  acf(df_data_frame[[i]], main = paste("ACF of", variable_name))
 }
 
 # Reset the graphical parameters to default
-par(mfrow = c(nrow, ncol))
+par(mfrow = c(1, 1))
+
+# Set up the combined plot grid again and adjust margins
+par(mfrow = c(nrow, ncol), mar = c(3, 3, 1, 1))
 
 # PACF plot
-for (i in seq_along(df_data_frame )) {
-  variable_name <- colnames(df_data_frame )[i]
-
-  # PACF plot
-  pacf(df_data_frame [[i]], main = paste("PACF of", variable_name))
+for (i in seq_along(df_data_frame)) {
+  variable_name <- colnames(df_data_frame)[i]
+  pacf(df_data_frame[[i]], main = paste("PACF of", variable_name))
 }
+
 
 ```
 
@@ -660,7 +659,7 @@ for (s in 1:S){
   Sigma <- Sigma.posterior[,,s]
   
   sign.restrictions.do.not.hold = TRUE
-  narrative.restriction.do.not.hold = TRUE
+
   i=1
   
   while (sign.restrictions.do.not.hold){
@@ -759,58 +758,57 @@ NarrativeSignRestrictions <- function(sign.restrictions,posterior,narrative.rest
   S = dim(A.posterior)[3]
   N = dim(B.posterior)[1]
   p = (dim(B1.posterior)[2]-1)/N
-   
+  
   
   R1            = diag(sign.restrictions)
   B0.draws      = array(NA,c(N,N,S))
   B1.draws      = array(NA,c(N,(1+N*p),S))
   pb = txtProgressBar(min = 0, max = S, initial = 0)
-for (s in 1:S){
-  
-  setTxtProgressBar(pb, s)
-  
-  B0.tilde <-B.posterior[,,s]
-  B1.tilde <-  B1.posterior[,,s]
-  A <- A.posterior[,,s]
-  Sigma <- Sigma.posterior[,,s]
-  
-  sign.restrictions.do.not.hold = TRUE
-  narrative.restriction.do.not.hold = TRUE
-  i=1
-  
-  while (sign.restrictions.do.not.hold){
-    X           = matrix(rnorm(N*N),N,N)
-    QR          = qr(X, tol = 1e-10)
-    Q           = qr.Q(QR,complete=TRUE)
-    R           = qr.R(QR,complete=TRUE)
-    Q           = t(Q %*% diag(sign(diag(R))))
-    B0          = Q%*%B0.tilde 
-    B0.inv      = solve(B0) 
-    B1          = Q%*%B1.tilde 
-    u = YY %*% t(B0) - XX %*% t(B1)
-    u= u[,1]
-    check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0  ) # Check reponse at time 0
-    check_narrative = prod(sign(u[narrative.restrictions]) > 0)
+  for (s in 1:S){
     
-    if (check == 1 && check_narrative == 1) {
+    setTxtProgressBar(pb, s)
+    
+    B0.tilde <-B.posterior[,,s]
+    B1.tilde <-  B1.posterior[,,s]
+    A <- A.posterior[,,s]
+    Sigma <- Sigma.posterior[,,s]
+    
+    sign.restrictions.do.not.hold = TRUE
+    narrative.restriction.do.not.hold = TRUE
+    i=1
+    
+    while (sign.restrictions.do.not.hold){
+      X           = matrix(rnorm(N*N),N,N)
+      QR          = qr(X, tol = 1e-10)
+      Q           = qr.Q(QR,complete=TRUE)
+      R           = qr.R(QR,complete=TRUE)
+      Q           = t(Q %*% diag(sign(diag(R))))
+      B0          = Q%*%B0.tilde 
+      B0.inv      = solve(B0) 
+      B1          = Q%*%B1.tilde 
+      u = YY %*% t(B0) - XX %*% t(B1)
+      u= u[,1]
+      check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0  ) # Check reponse at time 0
+      check_narrative = prod(sign(u[narrative.restrictions]) > 0)
+      
+      if (check == 1 && check_narrative == 1) {
         sign.restrictions.do.not.hold = FALSE
+      }
+      i = i + 1
+      B0.draws[, , s] = B0
+      B1.draws[, , s] = B1
     }
-    i = i + 1
-    B0.draws[, , s] = B0
-    B1.draws[, , s] = B1
+    
+    close(pb)
+    
   }
   
-  close(pb)
-
-}
-
   return (list(B0.draws = B0.draws,
                B1.draws = B1.draws,
                i        = i))
 }
+
 ```
-
-
 
 ## Simulations 
 This section aims to evaluate the code by generating artificial data consisting of 1000 observations simulated from a bivariate Gaussian random walk process. The covariance matrix of the process is set to be the 2x2 identity matrix. 
@@ -951,7 +949,7 @@ $$y_t=\begin{pmatrix}  govspend_t &= \text{government spending}
 \\ M3_t  &= \text{M3 money supply}
 \end{pmatrix}$$
 
-Sign Restrictions are given as the following:
+Sign Restrictions are taken as the following:
 
 1. Government spending: A positive government spending shock increases government spending (govspend).
 
@@ -965,25 +963,56 @@ Sign Restrictions are given as the following:
 
 6. M3 money supply: Since the government financed its spending through borrowing, this could increase the money supply.
 
+|                     |  Sign   |
+|---------------------|---------|
+| Government Spending | 1       |
+| Consumption         | 1       |
+| Real GDP            | 1       |
+| Real Exchange Rate  | 1       |
+| CPI                 | -1      |
+| M3                  | 1       |
+
+## Narrative information
+Information about the the government spending shock.
+
+## Impulse Response Function
 
 ```{r, echo=FALSE}
 library(HDInterval)
 set.seed(123456)
 ########IRF
 p = 5 # time lagt0
-N = 6
-S = 100
+N = 8
+S = 1000
 
 # Create Y and X
-y = ts(df[, !names(df) %in% c("Date","nomGDP","imports","exports")])
+
+
+
+######### spending,consumption,realGDP as log form ##################
+# dff = df[, names(df) %in% c("consumption","gov_spend","realGDP","M3","CPI","imports","exports")]
+# dff = df[, names(df) %in% c("consumption","gov_spend","realGDP","M3","imports","exports")]
+# dff = log(dff)
+# # dff$realTWI = df$realTWI
+# dff$CPI = df$CPI
+# y = ts(dff)
+
+# y = ts(df[, !names(df) %in% c("Date","nomGDP","imports","exports")])
+
+# y = ts(df[, !names(df) %in% c("Date","nomGDP","realTWI")])
+y = ts(df[, !names(df) %in% c("Date","nomGDP")])
+y = log(y)
+
 Y = y[(p+1):211,]
+
 X       = matrix(1,nrow(Y),1)
+
 for (i in 1:p){
   X     = cbind(X,y[(p+1):211-i,])
 }
 
-results = Posterior(Y,X,p,N,S,0.0000000000000001)
-Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,1,-1,1,1), results)
+results = Posterior(Y,X,p,N,S,1)
+Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,1,-1,1,-1,1,1), results)
 
 
 
@@ -993,20 +1022,25 @@ B0.draws = Sign_restritions$B0.draws
 B1.draws = Sign_restritions$B1.draws
 
 
+
+##############################################
 A.posterior <- array(NA,c(N*p+1,N,S))
 B.posterior       = array(NA,c(N,N,S))
 S.check <- array(NA,c(N,N,S))
+
 for (s in 1:S){
   # convert to into A and B
-  S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
-  cholSigma.s     = chol(S.check[,,s])
-  B.posterior[,,s]= t(cholSigma.s)
+  B  = solve(B0.draws[,,s])
+  # S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
+  # cholSigma.s     = chol(S.check[,,s])
+  # B.posterior[,,s]= t(cholSigma.s)
+  B.posterior[,,s] = B
   A.posterior[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
 }
 
 ############################### From the porsterior distribution#########
-#A.posterior = results$A.posterior
-#B.posterior = results$B.posterior
+# A.posterior = results$A.posterior
+# B.posterior = results$B.posterior
 
 
 ########https://www.sciencedirect.com/science/article/pii/S0014292121002634#####
@@ -1088,8 +1122,52 @@ for (n in 1:6){
   lines(hh, IRFs.k1[n,hh],lwd=2,col=mcxs1)
 }
 
+```
+## Forecast Varaince Decomposition
+
+```{r}
+# Plots of FEVD of Australian rgdp and p
+
+############################################################
+
+hh <- 1:(h + 1)
+fevd.au.rgdp <- apply(FEVD.posterior[2,,,], 1:2, mean)
+fevd.au.rgdp <- rbind(rep(0, h + 1), apply(fevd.au.rgdp, 2, cumsum))
+
+fevd.realTWI <- apply(FEVD.posterior[3,,,], 1:2, mean)
+fevd.realTWI <- rbind(rep(0, h + 1), apply(fevd.realTWI, 2, cumsum))
+
+colors <- c("deepskyblue1","deepskyblue2","deepskyblue","deepskyblue3","deepskyblue4","dodgerblue",
+            "maroon1","maroon","maroon2","magenta","maroon3","maroon4")
+
+
+
+# Set up the layout for two plots side by side
+# par(mfrow = c(3, 2), mar = rep(4, 4), cex.axis = 1, cex.lab = 0.8)
+
+# Plotting fevd-au-gdp-k1
+
+plot(hh, fevd.au.rgdp[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
+axis(1, hh, c("", "1 quarter", "", "", "1 year", "", "", "", "2 years"))
+axis(2, c(0, 50, 100), c("", "FEVD[au.rgdp]", ""))
+for (n in 1:N) {
+  polygon(c(hh, (h + 1):1), c(fevd.au.rgdp[n, hh], fevd.au.rgdp[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
+}
+axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9]))[c(3, 8, 10)], c("us.mps", "", "au.mps"))
+
+# Plotting fevd-au-p-k1
+plot(hh, fevd.realTWI[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
+axis(1, hh, c("", "1 quarter", "", "", "1 year", "", "", "", "2 years"))
+axis(2, c(0, 50, 100), c("", "FEVD[realTWI]", ""))
+for (n in 1:N) {
+  polygon(c(hh, (h + 1):1), c(fevd.realTWI[n, hh], fevd.realTWI[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
+}
+axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9]))[c(3, 10)], c("us.mps", "au.mps"))
+
+
 
 ```
+
 ## References {.unnumbered}
 
 
