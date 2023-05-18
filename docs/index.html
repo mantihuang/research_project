@@ -838,13 +838,6 @@ p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \tim
 </section>
 <section id="empirical-estimation" class="level1">
 <h1>5. Empirical Estimation</h1>
-<p>For basic model, I drop the variable exports and imports because the effect of government spending shock on these two variables are unclear. <span class="math display">\[y_t=\begin{pmatrix}  govspend_t &amp;= \text{government spending}
-\\ consump_t  &amp;= \text{consumption}
-\\ realGDP_t  &amp;= \text{real GDP}
-\\ TWI_t  &amp;= \text{real exchange rate (trade-weighted index)}
-\\ CPI_t  &amp;= \text{consumer price index}
-\\ M3_t  &amp;= \text{M3 money supply}
-\end{pmatrix}\]</span></p>
 <p>Sign Restrictions are taken as the following:</p>
 <ol type="1">
 <li><p>Government spending: A positive government spending shock increases government spending (govspend).</p></li>
@@ -884,6 +877,14 @@ p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \tim
 </tr>
 <tr class="even">
 <td>M3</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>Imports</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>Exports</td>
 <td>1</td>
 </tr>
 </tbody>

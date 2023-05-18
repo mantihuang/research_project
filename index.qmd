@@ -340,30 +340,31 @@ As anticipated, macroeconomic data is typically non-stationary. The only excepti
 nrow <- 3
 ncol <- 3
 
-# Set up the combined plot grid and adjust margins
-par(mfrow = c(nrow, ncol), mar = c(3, 3, 1, 1))
+# Set up the combined plot grid
+par(mfrow = c(nrow, ncol))
 
-# ACF plot
-for (i in seq_along(df_data_frame)) {
-  variable_name <- colnames(df_data_frame)[i]
-  acf(df_data_frame[[i]], main = paste("ACF of", variable_name))
+# Run the ACF and PACF functions for each variable and display the plots
+for (i in seq_along(df_data_frame )) {
+  variable_name <- colnames(df_data_frame )[i]
+
+  # ACF plot
+  acf(df_data_frame [[i]], main = paste("ACF of", variable_name))
 }
 
 # Reset the graphical parameters to default
-par(mfrow = c(1, 1))
-
-# Set up the combined plot grid again and adjust margins
-par(mfrow = c(nrow, ncol), mar = c(3, 3, 1, 1))
+par(mfrow = c(nrow, ncol))
 
 # PACF plot
-for (i in seq_along(df_data_frame)) {
-  variable_name <- colnames(df_data_frame)[i]
-  pacf(df_data_frame[[i]], main = paste("PACF of", variable_name))
+for (i in seq_along(df_data_frame )) {
+  variable_name <- colnames(df_data_frame )[i]
+
+  # PACF plot
+  pacf(df_data_frame [[i]], main = paste("PACF of", variable_name))
 }
 
 
-```
 
+```
 # 3. The model 
 
 
@@ -940,14 +941,6 @@ SN
 
 
 # 5. Empirical Estimation
-For basic model, I drop the variable exports and imports because the effect of government spending shock on these two variables are unclear.
-$$y_t=\begin{pmatrix}  govspend_t &= \text{government spending}
-\\ consump_t  &= \text{consumption}
-\\ realGDP_t  &= \text{real GDP}
-\\ TWI_t  &= \text{real exchange rate (trade-weighted index)}
-\\ CPI_t  &= \text{consumer price index}
-\\ M3_t  &= \text{M3 money supply}
-\end{pmatrix}$$
 
 Sign Restrictions are taken as the following:
 
@@ -971,6 +964,8 @@ Sign Restrictions are taken as the following:
 | Real Exchange Rate  | 1       |
 | CPI                 | -1      |
 | M3                  | 1       |
+| Imports             | 1       |
+| Exports             | 1       |
 
 ## Narrative information
 Information about the the government spending shock.
