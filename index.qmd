@@ -1059,7 +1059,7 @@ for (s in 1:S){
     if (i==1){
       IRF.posterior[,,i,s]        = B.posterior[,,s]
     } else {
-      IRF.posterior[,,i,s]        = J %*% A.bold.power %*% t(J) %*% IRF.posterior[,,i-1,s]
+      IRF.posterior[,,i,s]        = J %*% A.bold.power %*% t(J) %*% B.posterior[,,s]
       A.bold.power                = A.bold.power %*% A.bold
     }
     for (n in 1:N){
