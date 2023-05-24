@@ -14,8 +14,6 @@ bibliography: references.bib
 >
 > **Keywords.** Government spending shock, exchange rate,impulse responses
 
-Please note that the website https://www.rba.gov.au/statistics/tables/ may sometimes be unstable and unable to load. Therefore, you may encounter errors such as "Could not read HTML at https://www.rba.gov.au/statistics/tables/" when using read_rba() in R.
-
 
 
 # 1. The question objective, and motivation
@@ -230,9 +228,8 @@ Additionally, I also investigate the nominal exchange rate variable. I download 
 
 
 
-### Trade balance
-
-The trade balance data is calculated by taking the difference between exports and imports.
+### Exports and Imports
+As this research aims to identify the government spending shock, exports and imports are also included. The data is season-adjusted. Trade balance is calculated as the difference between exports and imports.
 
 
 ```{r}
@@ -341,7 +338,7 @@ nrow <- 3
 ncol <- 3
 
 # Set up the combined plot grid
-par(mfrow = c(nrow, ncol))
+par(mfrow = c(3,3))
 
 # Run the ACF and PACF functions for each variable and display the plots
 for (i in seq_along(df_data_frame )) {
@@ -587,6 +584,7 @@ Posterior <- function(Y, X, p, N, S,kappa.1) {
   # prior distribution
   ############################################################
   kappa.1     = kappa.1
+  # kappa.2     = 100
   kappa.2     = 100
   kappa.3     = 1
   A.prior     = matrix(0,nrow(A.hat),ncol(A.hat))
@@ -671,7 +669,8 @@ for (s in 1:S){
     Q           = t(Q %*% diag(sign(diag(R))))
     B0          = Q%*%B0.tilde 
     B0.inv      = solve(B0) 
-    check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0) # Check reponse at time 0
+    # check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0) # Check reponse at time 0
+    check       = prod(R1 %*% B0.inv %*% diag(N)[,1] >= 0)
     
     
     if (check==1){sign.restrictions.do.not.hold=FALSE}
@@ -789,7 +788,7 @@ NarrativeSignRestrictions <- function(sign.restrictions,posterior,narrative.rest
       B1          = Q%*%B1.tilde 
       u = YY %*% t(B0) - XX %*% t(B1)
       u= u[,1]
-      check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0  ) # Check reponse at time 0
+      check       = prod(R1 %*% B0.inv %*% diag(N)[,1] >= 0  ) # Check reponse at time 0
       check_narrative = prod(sign(u[narrative.restrictions]) > 0)
       
       if (check == 1 && check_narrative == 1) {
@@ -950,25 +949,26 @@ Sign Restrictions are taken as the following:
 
 3. Real GDP: A positive government spending shock is typically expected to increase real GDP, at least in the short term. Government spending is a component of GDP (which is the sum of consumption, investment, government spending, and net exports). Therefore, if government spending increases, all else being equal, real GDP should also increase.
 
-4. Real exchange rate: Generally, if the increase in government spending leads to higher interest rates, it could appreciate the real exchange rate as it attracts foreign investors seeking higher returns.
+4. Real exchange rate: The effect is unclear and thus I put 0.
 
-5. Consumer price index: By @jorgensen2022inflation, prices do not increase in response to a positive government spending shock. 
+5. Consumer price index: When there is a positive government spending shock, standard New Keynesian model predicts it is inflationary. Although @jorgensen2022inflation shows that in response to government spending shock, inflation could be flat or negative if the economy is hitting the zero lower bound, which goes beyond the scope of this research, current research does not take this into consideration. 
 
 6. M3 money supply: Since the government financed its spending through borrowing, this could increase the money supply.
+
+7. Imports and Exports: Evidence about the IRF for imports and exports is limited thus I place no restrictions (@blagrave2018crossborder) .
 
 |                     |  Sign   |
 |---------------------|---------|
 | Government Spending | 1       |
 | Consumption         | 1       |
 | Real GDP            | 1       |
-| Real Exchange Rate  | 1       |
-| CPI                 | -1      |
+| Real Exchange Rate  | 0       |
+| CPI                 | 1       |
 | M3                  | 1       |
-| Imports             | 1       |
-| Exports             | 1       |
+| Imports             | 0       |
+| Exports             | 0       |
 
-## Narrative information
-Information about the the government spending shock.
+
 
 ## Impulse Response Function
 
@@ -1007,16 +1007,19 @@ for (i in 1:p){
 }
 
 results = Posterior(Y,X,p,N,S,1)
-Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,1,-1,1,-1,1,1), results)
+# Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,1,-1,1,-1,1,1), results)
+# Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,0,1,1,1,1,1), results)
 
-
+Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), results)
+ # Narrative_Restriction = NarrativeSignRestrictions(sign.restrictions = c(1,1,1,-1,1,-1,1,1), results,c(16,50),Y,X)
 
 ##################### Results from the Sign_restriction ###################
 
 B0.draws = Sign_restritions$B0.draws
 B1.draws = Sign_restritions$B1.draws
 
-
+# B0.draws = Narrative_Restriction$B0.draws
+# B1.draws = Narrative_Restriction$B1.draws
 
 ##############################################
 A.posterior <- array(NA,c(N*p+1,N,S))
@@ -1024,24 +1027,21 @@ B.posterior       = array(NA,c(N,N,S))
 S.check <- array(NA,c(N,N,S))
 
 for (s in 1:S){
-  # convert to into A and B
-  B  = solve(B0.draws[,,s])
-  # S.check[,,s] <- B0.draws[,,s] %*% t(B0.draws[,,s])
-  # cholSigma.s     = chol(S.check[,,s])
-  # B.posterior[,,s]= t(cholSigma.s)
-  B.posterior[,,s] = B
-  A.posterior[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
+  # A.posterior[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
+  B.posterior[,,s] <- solve(B0.draws[,,s])
 }
 
+
+
 ############################### From the porsterior distribution#########
-# A.posterior = results$A.posterior
+A.posterior = results$A.posterior
 # B.posterior = results$B.posterior
 
 
 ########https://www.sciencedirect.com/science/article/pii/S0014292121002634#####
 
 
-h = 8
+h = 20
 
 
 
@@ -1075,7 +1075,9 @@ FEVD.posterior    = 100*FEVD.posterior
 
 # save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k002.RData")
 save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k1.RData")
+```
 
+```{r, echo=FALSE}
 # Define colors
 mcxs1  = "#05386B"
 mcxs2  = "#379683"
@@ -1099,18 +1101,21 @@ IRFs.inf.k1       = apply(IRF.inf.posterior[,1,],1,mean)
 rownames(IRFs.k1) = colnames(Y)
 
 IRFs.k1.hdi    = apply(IRF.posterior[,1,,],1:2,hdi, credMass=0.68)
-hh          = 1:9
+hh          = 1:h+1
 
 
-par(mfrow=c(3,2), mar=c(4,4.5,2,2),cex.axis=1.5, cex.lab=1.5)
-for (n in 1:6){
+par(mfrow=c(3,3), mar=c(4,4.5,2,2),cex.axis=1.5, cex.lab=1.5)
+  # par(mfrow=c(4,2), mar=c(3,3,2,2),cex.axis=1.5, cex.lab=1.5)
+for (n in 1:N){
   ylims     = range(IRFs.k1[n,hh],IRFs.k1.hdi[,n,hh])
   plot(hh,IRFs.k1[n,hh], type="l", ylim=ylims, axes=FALSE, xlab="", ylab=rownames(IRFs.k1)[n])
-  if (n==5 | n==6){
-    axis(1,c(1,2,5,9),c("","1 quarter","1 year","2 years"))
-  } else {
-    axis(1,c(1,2,5,9),c("","","",""))
-  }
+  # if (n==N-1 | n==N){
+    # axis(1,c(1,2,5,9),c("","1 quarter","1 year","2 years"))
+  # } else {
+    # axis(1,c(1,2,5,9),c("","","",""))
+  # }
+  axis(1, at = c(12), labels = c("2.5year"))
+  
   axis(2,c(ylims[1],0,ylims[2]),round(c(ylims[1],0,ylims[2]),3))
   polygon(c(hh,(h+1):1), c(IRFs.k1.hdi[1,n,hh],IRFs.k1.hdi[2,n,(h+1):1]), col=mcxs1.shade1,border=mcxs1.shade1)
   abline(h=0)
@@ -1118,6 +1123,16 @@ for (n in 1:6){
 }
 
 ```
+`The impulse response function (IRF) is depicted over a time span of 5 years. As anticipated, the impulse response aligns with the specified sign restriction, exhibiting the same sign as intended. Specifically, in the case of the real exchange rate, it initially depreciates and subsequently appreciates. The real exchange rate fully recovers to its pre-shock level within a period of 2.5 years.
+
+
+In response to a positive government spending shock, both imports and exports initially decrease. However, they gradually recover to their pre-shock levels within half a year. After the recovery period, both imports and exports continue to increase beyond their pre-shock levels. This indicates a positive long-term effect of the government spending shock on both imports and exports, leading to sustained growth in international trade.
+
+
+Following the shock, both consumption and real GDP display persistence, meaning they continue to exhibit sustained levels of activity even after the initial shock. 
+
+In contrast, the Consumer Price Index (CPI), M3 (a measure of the money supply), and government spending experience an initial increase in response to the shock. However, these variables subsequently begin to decrease after the initial increase. This suggests that the initial surge in CPI, M3, and government spending eventually tapers off, resulting in a downward trend.
+
 ## Forecast Varaince Decomposition
 
 ```{r}
@@ -1132,37 +1147,168 @@ fevd.au.rgdp <- rbind(rep(0, h + 1), apply(fevd.au.rgdp, 2, cumsum))
 fevd.realTWI <- apply(FEVD.posterior[3,,,], 1:2, mean)
 fevd.realTWI <- rbind(rep(0, h + 1), apply(fevd.realTWI, 2, cumsum))
 
+fevd.exports <- apply(FEVD.posterior[5,,,], 1:2, mean)
+fevd.exports <- rbind(rep(0, h + 1), apply(fevd.realTWI, 2, cumsum))
+
 colors <- c("deepskyblue1","deepskyblue2","deepskyblue","deepskyblue3","deepskyblue4","dodgerblue",
             "maroon1","maroon","maroon2","magenta","maroon3","maroon4")
 
 
 
 # Set up the layout for two plots side by side
-# par(mfrow = c(3, 2), mar = rep(4, 4), cex.axis = 1, cex.lab = 0.8)
+ par(mfrow = c(1, 2), mar = rep(4, 4), cex.axis = 1, cex.lab = 0.8)
 
 # Plotting fevd-au-gdp-k1
 
 plot(hh, fevd.au.rgdp[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
-axis(1, hh, c("", "1 quarter", "", "", "1 year", "", "", "", "2 years"))
+# Define labels vector for x-axis (axis 1)
+x_axis_labels <- rep("", length(hh))  # Start with a vector of empty strings of the same length as 'hh'
+x_axis_labels[c(2, 5, 9)] <- c("1 quarter", "1 year", "2 years")  # Place your labels at desired positions
+
+# Replace the labels in your axis() calls with the revised labels vector
+axis(1, hh, x_axis_labels)
+
+# axis(1, hh, c("", "1 quarter", "", "", "1 year", "", "", "", "2 years"))
 axis(2, c(0, 50, 100), c("", "FEVD[au.rgdp]", ""))
 for (n in 1:N) {
   polygon(c(hh, (h + 1):1), c(fevd.au.rgdp[n, hh], fevd.au.rgdp[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
 }
-axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9]))[c(3, 8, 10)], c("us.mps", "", "au.mps"))
+axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9]))[c(1, 3, 10)], c("Government spending shock", "", "au.mps"))
 
 # Plotting fevd-au-p-k1
 plot(hh, fevd.realTWI[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
-axis(1, hh, c("", "1 quarter", "", "", "1 year", "", "", "", "2 years"))
+axis(1, hh, x_axis_labels)
 axis(2, c(0, 50, 100), c("", "FEVD[realTWI]", ""))
 for (n in 1:N) {
   polygon(c(hh, (h + 1):1), c(fevd.realTWI[n, hh], fevd.realTWI[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
 }
-axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9]))[c(3, 10)], c("us.mps", "au.mps"))
-
-
-
+axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9]))[c(3, 10)],)
 ```
+The current analysis focuses on identifying one specific shock; however, it is important to consider that other potential shocks could also contribute to explaining the observed variance. Further analysis using FEVD (Forecast Error Variance Decomposition) can shed light on the impact of these alternative shocks. As can be seen from the plot, each shock contributes almost equally to the overall variation.
 
+## Narrative information
+
+According to the perspective provided by @laurie2008perspective, there are three distinct time periods that are widely recognized for government spending expansion. These periods are as follows:
+
+1. Whitlam Government, 1974-75: The analysis highlights the increased government spending during the Whitlam Government in 1974-75 as one of the significant periods of expansion.
+$\implies$
+Narrative Sign Restriction 1 : The government spending shock must take positive values in 1974.
+ 
+2. Recessions in 1982-83: The paper identifies the recessions in 1982-83 as another period characterized by increased government spending.
+$\implies$
+Narrative Sign Restriction 2 : The government spending shock must take positive values in 1982.
+
+3. Recessions in 1990-91: The perspective also emphasizes the increased government spending that occurred following the recessions in 1990-91.
+$\implies$
+Narrative Sign Restriction 3 : The government spending shock must take positive values in 1990.
+
+Current session places three additional restrictions on the government spending shock.
+
+
+
+
+```{r}
+
+results = Posterior(Y,X,p,N,S,1)
+Narrative_Restriction = NarrativeSignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), results,c(16,50,80),Y,X)
+# Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,0,-1,1,1,1,1), results)
+B0.draws = Narrative_Restriction$B0.draws
+B1.draws = Narrative_Restriction$B1.draws
+
+##############################################
+A.posterior <- array(NA,c(N*p+1,N,S))
+B.posterior       = array(NA,c(N,N,S))
+S.check <- array(NA,c(N,N,S))
+
+for (s in 1:S){
+  # A.posterior[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
+  B.posterior[,,s] <- solve(B0.draws[,,s])
+}
+
+
+
+############################### From the porsterior distribution#########
+A.posterior = results$A.posterior
+# B.posterior = results$B.posterior
+
+
+########https://www.sciencedirect.com/science/article/pii/S0014292121002634#####
+
+
+h = 20
+
+
+
+IRF.posterior     = array(NA,c(N,N,h+1,S))
+IRF.inf.posterior = array(NA,c(N,N,S))
+FEVD.posterior    = array(NA,c(N,N,h+1,S))
+J                 = cbind(diag(N),matrix(0,N,N*(p-1)))
+
+for (s in 1:S){
+  A.bold          = rbind(t(A.posterior[2:(1+N*p),,s]),cbind(diag(N*(p-1)),matrix(0,N*(p-1),N)))
+  IRF.inf.posterior[,,s]          = J %*% solve(diag(N*p)-A.bold) %*% t(J) %*% B.posterior[,,s]
+  
+  A.bold.power    = A.bold
+  for (i in 1:(h+1)){
+    if (i==1){
+      IRF.posterior[,,i,s]        = B.posterior[,,s]
+    } else {
+      IRF.posterior[,,i,s]        = J %*% A.bold.power %*% t(J) %*% B.posterior[,,s]
+      A.bold.power                = A.bold.power %*% A.bold
+    }
+    for (n in 1:N){
+      for (nn in 1:N){
+        FEVD.posterior[n,nn,i,s]  = sum(IRF.posterior[n,nn,1:i,s]^2)
+      }
+    }
+    FEVD.posterior[,,i,s]         = diag(1/apply(FEVD.posterior[,,i,s],1,sum))%*%FEVD.posterior[,,i,s]
+  }
+}
+FEVD.posterior    = 100*FEVD.posterior
+
+
+# save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k002.RData")
+save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k1_narrative.RData")
+
+load("irf-fevd-k1_narrative.RData")
+IRFs.k1           = apply(IRF.posterior[,1,,],1:2,mean) 
+
+######1st shock is government  spending shock
+
+IRFs.inf.k1       = apply(IRF.inf.posterior[,1,],1,mean)
+rownames(IRFs.k1) = colnames(Y)
+
+IRFs.k1.hdi    = apply(IRF.posterior[,1,,],1:2,hdi, credMass=0.68)
+hh          = 1:h+1
+
+
+par(mfrow=c(3,3), mar=c(4,4.5,2,2),cex.axis=1.5, cex.lab=1.5)
+  # par(mfrow=c(4,2), mar=c(3,3,2,2),cex.axis=1.5, cex.lab=1.5)
+for (n in 1:N){
+  ylims     = range(IRFs.k1[n,hh],IRFs.k1.hdi[,n,hh])
+  plot(hh,IRFs.k1[n,hh], type="l", ylim=ylims, axes=FALSE, xlab="", ylab=rownames(IRFs.k1)[n])
+  # if (n==N-1 | n==N){
+  #   axis(1,c(1,2,5,9),c("","1 quarter","1 year","2 years"))
+  # } else {
+  #   axis(1,c(1,2,5,9),c("","","",""))
+  # }
+    axis(1, at = c(12), labels = c("2.5year"))
+  axis(2,c(ylims[1],0,ylims[2]),round(c(ylims[1],0,ylims[2]),3))
+  polygon(c(hh,(h+1):1), c(IRFs.k1.hdi[1,n,hh],IRFs.k1.hdi[2,n,(h+1):1]), col=mcxs1.shade1,border=mcxs1.shade1)
+  abline(h=0)
+  lines(hh, IRFs.k1[n,hh],lwd=2,col=mcxs1)
+}
+```
+The key distinction lies in the fact that following the shock, the real exchange rate demonstrates a persistent appreciation and ongoing upward trend. Additionally, the initial response of imports and exports undergoes a noticeable alteration. Based on the provided narrative information, it is feasible to provide a more precise identification of the government spending shock given the information.
+
+
+Note:
+
+Please note the following issues encountered during the empirical estimation:
+
+1. Initially, I observed explosive Impulse Response Functions (IRF). However, I found that applying a logarithmic transformation to every variable greatly alleviates this problem.
+
+2. The original code, while functioning well with simulated data, does not yield satisfactory results with the current dataset. Specifically, the IRF reverts to zero after a single period. Despite thorough checks of the functions and plotting, I have been unable to pinpoint the cause of this issue. Thankfully, Professor Tomasz has been incredibly helpful in examining the problem. Current approach is to use B0 from the sign restrictions and A from the posterior since current algorithm adopts the RF and then transform to SF, which may cause problems in the transformation procedure. And sign restrictions does not touch a lot on the A matrix.
 ## References {.unnumbered}
 
 

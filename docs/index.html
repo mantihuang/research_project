@@ -159,7 +159,7 @@ div.csl-indent {
   <li><a href="#consumption" id="toc-consumption" class="nav-link" data-scroll-target="#consumption">Consumption</a></li>
   <li><a href="#gdp" id="toc-gdp" class="nav-link" data-scroll-target="#gdp">GDP</a></li>
   <li><a href="#exchange-rate" id="toc-exchange-rate" class="nav-link" data-scroll-target="#exchange-rate">Exchange rate</a></li>
-  <li><a href="#trade-balance" id="toc-trade-balance" class="nav-link" data-scroll-target="#trade-balance">Trade balance</a></li>
+  <li><a href="#exports-and-imports" id="toc-exports-and-imports" class="nav-link" data-scroll-target="#exports-and-imports">Exports and Imports</a></li>
   <li><a href="#government-spending-data" id="toc-government-spending-data" class="nav-link" data-scroll-target="#government-spending-data">government spending data</a></li>
   </ul></li>
   <li><a href="#preliminary-data-analysis" id="toc-preliminary-data-analysis" class="nav-link" data-scroll-target="#preliminary-data-analysis">preliminary Data Analysis</a>
@@ -190,10 +190,9 @@ div.csl-indent {
   </ul></li>
   <li><a href="#empirical-estimation" id="toc-empirical-estimation" class="nav-link" data-scroll-target="#empirical-estimation">5. Empirical Estimation</a>
   <ul class="collapse">
-  <li><a href="#narrative-information" id="toc-narrative-information" class="nav-link" data-scroll-target="#narrative-information">Narrative information</a></li>
   <li><a href="#impulse-response-function" id="toc-impulse-response-function" class="nav-link" data-scroll-target="#impulse-response-function">Impulse Response Function</a></li>
   <li><a href="#forecast-varaince-decomposition" id="toc-forecast-varaince-decomposition" class="nav-link" data-scroll-target="#forecast-varaince-decomposition">Forecast Varaince Decomposition</a></li>
-  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  <li><a href="#narrative-information" id="toc-narrative-information" class="nav-link" data-scroll-target="#narrative-information">Narrative information</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -228,7 +227,6 @@ div.csl-indent {
 <p><strong>Abstract.</strong> This research project investigates the effects of unanticipated government spending shocks on output, real exchange rate, and consumption, particularly in the context of the Australian economy. Utilizing quarterly data and the SVAR model, the study captures the dynamic relationships among the endogenous variables. The model estimates impulse response functions (IRFs) and forecast error variance decomposition (FEVDs) for each endogenous variable, allowing for the examination of the dynamic responses of variables and quantification of forecast error variances attributable to the shocks.</p>
 <p><strong>Keywords.</strong> Government spending shock, exchange rate,impulse responses</p>
 </blockquote>
-<p>Please note that the website https://www.rba.gov.au/statistics/tables/ may sometimes be unstable and unable to load. Therefore, you may encounter errors such as “Could not read HTML at https://www.rba.gov.au/statistics/tables/” when using read_rba() in R.</p>
 <section id="the-question-objective-and-motivation" class="level1">
 <h1>1. The question objective, and motivation</h1>
 <section id="objective" class="level2">
@@ -297,9 +295,9 @@ div.csl-indent {
 </div>
 <p>Additionally, I also investigate the nominal exchange rate variable. I download the AUD/USD exchange rate, as the US dollar is widely accepted as an international currency. (Note: The data obtained using the package may not exactly match the description on the website.) However, since the nominal exchange rate may be influenced by various factors and due to data availability constraints, this research will focus exclusively on the real interest rate (TWI).</p>
 </section>
-<section id="trade-balance" class="level3">
-<h3 class="anchored" data-anchor-id="trade-balance">Trade balance</h3>
-<p>The trade balance data is calculated by taking the difference between exports and imports.</p>
+<section id="exports-and-imports" class="level3">
+<h3 class="anchored" data-anchor-id="exports-and-imports">Exports and Imports</h3>
+<p>As this research aims to identify the government spending shock, exports and imports are also included. The data is season-adjusted. Trade balance is calculated as the difference between exports and imports.</p>
 <div class="cell">
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
@@ -561,43 +559,44 @@ p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \tim
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># prior distribution</span></span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="do">############################################################</span></span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  kappa<span class="fl">.1</span>     <span class="ot">=</span> kappa<span class="fl">.1</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  kappa<span class="fl">.2</span>     <span class="ot">=</span> <span class="dv">100</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  kappa<span class="fl">.3</span>     <span class="ot">=</span> <span class="dv">1</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  A.prior     <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">0</span>,<span class="fu">nrow</span>(A.hat),<span class="fu">ncol</span>(A.hat))</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  A.prior[<span class="dv">2</span><span class="sc">:</span>(N<span class="sc">+</span><span class="dv">1</span>),] <span class="ot">=</span> kappa<span class="fl">.3</span><span class="sc">*</span><span class="fu">diag</span>(N)</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  V.prior     <span class="ot">=</span> <span class="fu">diag</span>(<span class="fu">c</span>(kappa<span class="fl">.2</span>,kappa<span class="fl">.1</span><span class="sc">*</span>((<span class="dv">1</span><span class="sc">:</span>p)<span class="sc">^</span>(<span class="sc">-</span><span class="dv">2</span>))<span class="sc">%x%</span><span class="fu">rep</span>(<span class="dv">1</span>,N)))</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  S.prior     <span class="ot">=</span> <span class="fu">diag</span>(<span class="fu">diag</span>(Sigma.hat))</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  nu.prior    <span class="ot">=</span> N<span class="sc">+</span><span class="dv">1</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># normal-inverse Wishard posterior parameters</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="do">############################################################</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  V.bar.inv   <span class="ot">=</span> <span class="fu">t</span>(X)<span class="sc">%*%</span>X <span class="sc">+</span> <span class="fu">diag</span>(<span class="dv">1</span><span class="sc">/</span><span class="fu">diag</span>(V.prior))</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  V.bar       <span class="ot">=</span> <span class="fu">solve</span>(V.bar.inv)</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  A.bar       <span class="ot">=</span> V.bar<span class="sc">%*%</span>(<span class="fu">t</span>(X)<span class="sc">%*%</span>Y <span class="sc">+</span> <span class="fu">diag</span>(<span class="dv">1</span><span class="sc">/</span><span class="fu">diag</span>(V.prior))<span class="sc">%*%</span>A.prior)</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  nu.bar      <span class="ot">=</span> <span class="fu">nrow</span>(Y) <span class="sc">+</span> nu.prior</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  S.bar       <span class="ot">=</span> S.prior <span class="sc">+</span> <span class="fu">t</span>(Y)<span class="sc">%*%</span>Y <span class="sc">+</span> <span class="fu">t</span>(A.prior)<span class="sc">%*%</span><span class="fu">diag</span>(<span class="dv">1</span><span class="sc">/</span><span class="fu">diag</span>(V.prior))<span class="sc">%*%</span>A.prior <span class="sc">-</span> <span class="fu">t</span>(A.bar)<span class="sc">%*%</span>V.bar.inv<span class="sc">%*%</span>A.bar</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  S.bar.inv   <span class="ot">=</span> <span class="fu">solve</span>(S.bar)</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># posterior draws </span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="do">############################################################</span></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  Sigma.posterior   <span class="ot">=</span> <span class="fu">rWishart</span>(S, <span class="at">df=</span>nu.bar, <span class="at">Sigma=</span>S.bar.inv)</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>  Sigma.posterior   <span class="ot">=</span> <span class="fu">apply</span>(Sigma.posterior,<span class="dv">3</span>,solve)</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  Sigma.posterior   <span class="ot">=</span> <span class="fu">array</span>(Sigma.posterior,<span class="fu">c</span>(N,N,S))</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  A.posterior       <span class="ot">=</span> <span class="fu">array</span>(<span class="fu">rnorm</span>(<span class="fu">prod</span>(<span class="fu">c</span>(<span class="fu">dim</span>(A.bar),S))),<span class="fu">c</span>(<span class="fu">dim</span>(A.bar),S))</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  B.posterior       <span class="ot">=</span> <span class="fu">array</span>(<span class="cn">NA</span>,<span class="fu">c</span>(N,N,S))</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  L                 <span class="ot">=</span> <span class="fu">t</span>(<span class="fu">chol</span>(V.bar))</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>  B1.posterior <span class="ot">=</span> <span class="fu">array</span>(<span class="cn">NA</span>,<span class="fu">c</span>(N,(<span class="dv">1</span><span class="sc">+</span>N<span class="sc">*</span>p),S))</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (s <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>S){</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    cholSigma.s     <span class="ot">=</span> <span class="fu">chol</span>(Sigma.posterior[,,s])</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    B.posterior[,,s]<span class="ot">=</span> <span class="fu">t</span>(cholSigma.s)</span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    A.posterior[,,s]<span class="ot">=</span> A.bar <span class="sc">+</span> L<span class="sc">%*%</span>A.posterior[,,s]<span class="sc">%*%</span>cholSigma.s</span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    B1.posterior[,,s] <span class="ot">=</span>  B.posterior[,,s]<span class="sc">%*%</span><span class="fu">t</span>(A.posterior[,,s])</span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">A.posterior =</span> A.posterior, <span class="at">B.posterior =</span> B.posterior, <span class="at">Sigma.posterior =</span> Sigma.posterior,<span class="at">B1.posterior =</span> B1.posterior))</span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># kappa.2     = 100</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  kappa<span class="fl">.2</span>     <span class="ot">=</span> <span class="dv">100</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  kappa<span class="fl">.3</span>     <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  A.prior     <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">0</span>,<span class="fu">nrow</span>(A.hat),<span class="fu">ncol</span>(A.hat))</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  A.prior[<span class="dv">2</span><span class="sc">:</span>(N<span class="sc">+</span><span class="dv">1</span>),] <span class="ot">=</span> kappa<span class="fl">.3</span><span class="sc">*</span><span class="fu">diag</span>(N)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  V.prior     <span class="ot">=</span> <span class="fu">diag</span>(<span class="fu">c</span>(kappa<span class="fl">.2</span>,kappa<span class="fl">.1</span><span class="sc">*</span>((<span class="dv">1</span><span class="sc">:</span>p)<span class="sc">^</span>(<span class="sc">-</span><span class="dv">2</span>))<span class="sc">%x%</span><span class="fu">rep</span>(<span class="dv">1</span>,N)))</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  S.prior     <span class="ot">=</span> <span class="fu">diag</span>(<span class="fu">diag</span>(Sigma.hat))</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  nu.prior    <span class="ot">=</span> N<span class="sc">+</span><span class="dv">1</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># normal-inverse Wishard posterior parameters</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="do">############################################################</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  V.bar.inv   <span class="ot">=</span> <span class="fu">t</span>(X)<span class="sc">%*%</span>X <span class="sc">+</span> <span class="fu">diag</span>(<span class="dv">1</span><span class="sc">/</span><span class="fu">diag</span>(V.prior))</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  V.bar       <span class="ot">=</span> <span class="fu">solve</span>(V.bar.inv)</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  A.bar       <span class="ot">=</span> V.bar<span class="sc">%*%</span>(<span class="fu">t</span>(X)<span class="sc">%*%</span>Y <span class="sc">+</span> <span class="fu">diag</span>(<span class="dv">1</span><span class="sc">/</span><span class="fu">diag</span>(V.prior))<span class="sc">%*%</span>A.prior)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  nu.bar      <span class="ot">=</span> <span class="fu">nrow</span>(Y) <span class="sc">+</span> nu.prior</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  S.bar       <span class="ot">=</span> S.prior <span class="sc">+</span> <span class="fu">t</span>(Y)<span class="sc">%*%</span>Y <span class="sc">+</span> <span class="fu">t</span>(A.prior)<span class="sc">%*%</span><span class="fu">diag</span>(<span class="dv">1</span><span class="sc">/</span><span class="fu">diag</span>(V.prior))<span class="sc">%*%</span>A.prior <span class="sc">-</span> <span class="fu">t</span>(A.bar)<span class="sc">%*%</span>V.bar.inv<span class="sc">%*%</span>A.bar</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  S.bar.inv   <span class="ot">=</span> <span class="fu">solve</span>(S.bar)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="co"># posterior draws </span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  <span class="do">############################################################</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>  Sigma.posterior   <span class="ot">=</span> <span class="fu">rWishart</span>(S, <span class="at">df=</span>nu.bar, <span class="at">Sigma=</span>S.bar.inv)</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  Sigma.posterior   <span class="ot">=</span> <span class="fu">apply</span>(Sigma.posterior,<span class="dv">3</span>,solve)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  Sigma.posterior   <span class="ot">=</span> <span class="fu">array</span>(Sigma.posterior,<span class="fu">c</span>(N,N,S))</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  A.posterior       <span class="ot">=</span> <span class="fu">array</span>(<span class="fu">rnorm</span>(<span class="fu">prod</span>(<span class="fu">c</span>(<span class="fu">dim</span>(A.bar),S))),<span class="fu">c</span>(<span class="fu">dim</span>(A.bar),S))</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  B.posterior       <span class="ot">=</span> <span class="fu">array</span>(<span class="cn">NA</span>,<span class="fu">c</span>(N,N,S))</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>  L                 <span class="ot">=</span> <span class="fu">t</span>(<span class="fu">chol</span>(V.bar))</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  B1.posterior <span class="ot">=</span> <span class="fu">array</span>(<span class="cn">NA</span>,<span class="fu">c</span>(N,(<span class="dv">1</span><span class="sc">+</span>N<span class="sc">*</span>p),S))</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (s <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>S){</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    cholSigma.s     <span class="ot">=</span> <span class="fu">chol</span>(Sigma.posterior[,,s])</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    B.posterior[,,s]<span class="ot">=</span> <span class="fu">t</span>(cholSigma.s)</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    A.posterior[,,s]<span class="ot">=</span> A.bar <span class="sc">+</span> L<span class="sc">%*%</span>A.posterior[,,s]<span class="sc">%*%</span>cholSigma.s</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>    B1.posterior[,,s] <span class="ot">=</span>  B.posterior[,,s]<span class="sc">%*%</span><span class="fu">t</span>(A.posterior[,,s])</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">A.posterior =</span> A.posterior, <span class="at">B.posterior =</span> B.posterior, <span class="at">Sigma.posterior =</span> Sigma.posterior,<span class="at">B1.posterior =</span> B1.posterior))</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The sign restriction algorithm is based on lecture algorithm 2. For current project, it only restricts the impulse response function at time 0.</p>
 <div class="cell">
@@ -643,22 +642,23 @@ p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \tim
 <span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    Q           <span class="ot">=</span> <span class="fu">t</span>(Q <span class="sc">%*%</span> <span class="fu">diag</span>(<span class="fu">sign</span>(<span class="fu">diag</span>(R))))</span>
 <span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    B0          <span class="ot">=</span> Q<span class="sc">%*%</span>B0.tilde </span>
 <span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    B0.inv      <span class="ot">=</span> <span class="fu">solve</span>(B0) </span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    check       <span class="ot">=</span> <span class="fu">prod</span>(R1 <span class="sc">%*%</span> B0.inv <span class="sc">%*%</span> <span class="fu">diag</span>(N)[,<span class="dv">1</span>] <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="co"># Check reponse at time 0</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># check       = prod(R1 %*% B0.inv %*% diag(N)[,1] &gt; 0) # Check reponse at time 0</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    check       <span class="ot">=</span> <span class="fu">prod</span>(R1 <span class="sc">%*%</span> B0.inv <span class="sc">%*%</span> <span class="fu">diag</span>(N)[,<span class="dv">1</span>] <span class="sc">&gt;=</span> <span class="dv">0</span>)</span>
 <span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (check<span class="sc">==</span><span class="dv">1</span>){sign.restrictions.do.not.hold<span class="ot">=</span><span class="cn">FALSE</span>}</span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    i<span class="ot">=</span>i<span class="sc">+</span><span class="dv">1</span></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>  B1            <span class="ot">=</span> Q<span class="sc">%*%</span>B1.tilde </span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>  B0.draws[,,s] <span class="ot">=</span> B0</span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>  B1.draws[,,s] <span class="ot">=</span> B1</span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">list</span>(<span class="at">B0.draws =</span> B0.draws,</span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>               <span class="at">B1.draws =</span> B1.draws,</span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>               <span class="at">i        =</span> i))</span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (check<span class="sc">==</span><span class="dv">1</span>){sign.restrictions.do.not.hold<span class="ot">=</span><span class="cn">FALSE</span>}</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    i<span class="ot">=</span>i<span class="sc">+</span><span class="dv">1</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>  B1            <span class="ot">=</span> Q<span class="sc">%*%</span>B1.tilde </span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>  B0.draws[,,s] <span class="ot">=</span> B0</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>  B1.draws[,,s] <span class="ot">=</span> B1</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (<span class="fu">list</span>(<span class="at">B0.draws =</span> B0.draws,</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>               <span class="at">B1.draws =</span> B1.draws,</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>               <span class="at">i        =</span> i))</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="extended-model" class="level2">
@@ -712,7 +712,7 @@ p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \tim
 <span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>      B1          <span class="ot">=</span> Q<span class="sc">%*%</span>B1.tilde </span>
 <span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>      u <span class="ot">=</span> YY <span class="sc">%*%</span> <span class="fu">t</span>(B0) <span class="sc">-</span> XX <span class="sc">%*%</span> <span class="fu">t</span>(B1)</span>
 <span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>      u<span class="ot">=</span> u[,<span class="dv">1</span>]</span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>      check       <span class="ot">=</span> <span class="fu">prod</span>(R1 <span class="sc">%*%</span> B0.inv <span class="sc">%*%</span> <span class="fu">diag</span>(N)[,<span class="dv">1</span>] <span class="sc">&gt;</span> <span class="dv">0</span>  ) <span class="co"># Check reponse at time 0</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>      check       <span class="ot">=</span> <span class="fu">prod</span>(R1 <span class="sc">%*%</span> B0.inv <span class="sc">%*%</span> <span class="fu">diag</span>(N)[,<span class="dv">1</span>] <span class="sc">&gt;=</span> <span class="dv">0</span>  ) <span class="co"># Check reponse at time 0</span></span>
 <span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>      check_narrative <span class="ot">=</span> <span class="fu">prod</span>(<span class="fu">sign</span>(u[narrative.restrictions]) <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
 <span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>      </span>
 <span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (check <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;&amp;</span> check_narrative <span class="sc">==</span> <span class="dv">1</span>) {</span>
@@ -843,9 +843,10 @@ p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \tim
 <li><p>Government spending: A positive government spending shock increases government spending (govspend).</p></li>
 <li><p>Consumption: Generally, a positive government spending shock could potentially increase consumption. This is due to the multiplier effect. As the government spends more, this increases income for businesses and households, which can then lead to higher consumption.</p></li>
 <li><p>Real GDP: A positive government spending shock is typically expected to increase real GDP, at least in the short term. Government spending is a component of GDP (which is the sum of consumption, investment, government spending, and net exports). Therefore, if government spending increases, all else being equal, real GDP should also increase.</p></li>
-<li><p>Real exchange rate: Generally, if the increase in government spending leads to higher interest rates, it could appreciate the real exchange rate as it attracts foreign investors seeking higher returns.</p></li>
-<li><p>Consumer price index: By <span class="citation" data-cites="jorgensen2022inflation">Jørgensen and Ravn (<a href="#ref-jorgensen2022inflation" role="doc-biblioref">2022</a>)</span>, prices do not increase in response to a positive government spending shock.</p></li>
+<li><p>Real exchange rate: The effect is unclear and thus I put 0.</p></li>
+<li><p>Consumer price index: When there is a positive government spending shock, standard New Keynesian model predicts it is inflationary. Although <span class="citation" data-cites="jorgensen2022inflation">Jørgensen and Ravn (<a href="#ref-jorgensen2022inflation" role="doc-biblioref">2022</a>)</span> shows that in response to government spending shock, inflation could be flat or negative if the economy is hitting the zero lower bound, which goes beyond the scope of this research, current research does not take this into consideration.</p></li>
 <li><p>M3 money supply: Since the government financed its spending through borrowing, this could increase the money supply.</p></li>
+<li><p>Imports and Exports: Evidence about the IRF for imports and exports is limited thus I place no restrictions (<span class="citation" data-cites="blagrave2018crossborder">Blagrave et al. (<a href="#ref-blagrave2018crossborder" role="doc-biblioref">2018</a>)</span>) .</p></li>
 </ol>
 <table class="table">
 <thead>
@@ -869,11 +870,11 @@ p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \tim
 </tr>
 <tr class="even">
 <td>Real Exchange Rate</td>
-<td>1</td>
+<td>0</td>
 </tr>
 <tr class="odd">
 <td>CPI</td>
-<td>-1</td>
+<td>1</td>
 </tr>
 <tr class="even">
 <td>M3</td>
@@ -881,42 +882,65 @@ p(A,\Sigma|Y,X) \propto \det{(\Sigma)}^{-\frac{T+N+K+\underline{\nu}+1}{2}} \tim
 </tr>
 <tr class="odd">
 <td>Imports</td>
-<td>1</td>
+<td>0</td>
 </tr>
 <tr class="even">
 <td>Exports</td>
-<td>1</td>
+<td>0</td>
 </tr>
 </tbody>
 </table>
-<section id="narrative-information" class="level2">
-<h2 class="anchored" data-anchor-id="narrative-information">Narrative information</h2>
-<p>Information about the the government spending shock.</p>
-</section>
 <section id="impulse-response-function" class="level2">
 <h2 class="anchored" data-anchor-id="impulse-response-function">Impulse Response Function</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>================================================================================</code></pre>
 </div>
+</div>
+<div class="cell">
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+<p>`The impulse response function (IRF) is depicted over a time span of 5 years. As anticipated, the impulse response aligns with the specified sign restriction, exhibiting the same sign as intended. Specifically, in the case of the real exchange rate, it initially depreciates and subsequently appreciates. The real exchange rate fully recovers to its pre-shock level within a period of 2.5 years.</p>
+<p>In response to a positive government spending shock, both imports and exports initially decrease. However, they gradually recover to their pre-shock levels within half a year. After the recovery period, both imports and exports continue to increase beyond their pre-shock levels. This indicates a positive long-term effect of the government spending shock on both imports and exports, leading to sustained growth in international trade.</p>
+<p>Following the shock, both consumption and real GDP display persistence, meaning they continue to exhibit sustained levels of activity even after the initial shock.</p>
+<p>In contrast, the Consumer Price Index (CPI), M3 (a measure of the money supply), and government spending experience an initial increase in response to the shock. However, these variables subsequently begin to decrease after the initial increase. This suggests that the initial surge in CPI, M3, and government spending eventually tapers off, resulting in a downward trend.</p>
 </section>
 <section id="forecast-varaince-decomposition" class="level2">
 <h2 class="anchored" data-anchor-id="forecast-varaince-decomposition">Forecast Varaince Decomposition</h2>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>The current analysis focuses on identifying one specific shock; however, it is important to consider that other potential shocks could also contribute to explaining the observed variance. Further analysis using FEVD (Forecast Error Variance Decomposition) can shed light on the impact of these alternative shocks. As can be seen from the plot, each shock contributes almost equally to the overall variation.</p>
+</section>
+<section id="narrative-information" class="level2">
+<h2 class="anchored" data-anchor-id="narrative-information">Narrative information</h2>
+<p>According to the perspective provided by <span class="citation" data-cites="laurie2008perspective">Laurie and McDonald (<a href="#ref-laurie2008perspective" role="doc-biblioref">2008</a>)</span>, there are three distinct time periods that are widely recognized for government spending expansion. These periods are as follows:</p>
+<ol type="1">
+<li><p>Whitlam Government, 1974-75: The analysis highlights the increased government spending during the Whitlam Government in 1974-75 as one of the significant periods of expansion. <span class="math inline">\(\implies\)</span> Narrative Sign Restriction 1 : The government spending shock must take positive values in 1974.</p></li>
+<li><p>Recessions in 1982-83: The paper identifies the recessions in 1982-83 as another period characterized by increased government spending. <span class="math inline">\(\implies\)</span> Narrative Sign Restriction 2 : The government spending shock must take positive values in 1982.</p></li>
+<li><p>Recessions in 1990-91: The perspective also emphasizes the increased government spending that occurred following the recessions in 1990-91. <span class="math inline">\(\implies\)</span> Narrative Sign Restriction 3 : The government spending shock must take positive values in 1990.</p></li>
+</ol>
+<p>Current session places three additional restrictions on the government spending shock.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+================================================================================</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-19-2.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-</section>
-<section id="references" class="level2 unnumbered">
-
+<p>The key distinction lies in the fact that following the shock, the real exchange rate demonstrates a persistent appreciation and ongoing upward trend. Additionally, the initial response of imports and exports undergoes a noticeable alteration. Based on the provided narrative information, it is feasible to provide a more precise identification of the government spending shock given the information.</p>
+<p>Note:</p>
+<p>Please note the following issues encountered during the empirical estimation:</p>
+<ol type="1">
+<li><p>Initially, I observed explosive Impulse Response Functions (IRF). However, I found that applying a logarithmic transformation to every variable greatly alleviates this problem.</p></li>
+<li><p>The original code, while functioning well with simulated data, does not yield satisfactory results with the current dataset. Specifically, the IRF reverts to zero after a single period. Despite thorough checks of the functions and plotting, I have been unable to pinpoint the cause of this issue. Thankfully, Professor Tomasz has been incredibly helpful in examining the problem. Current approach is to use B0 from the sign restrictions and A from the posterior since current algorithm adopts the RF and then transform to SF, which may cause problems in the transformation procedure. And sign restrictions does not touch a lot on the A matrix. ## References {.unnumbered}</p></li>
+</ol>
 
 
 
@@ -930,8 +954,14 @@ Antolín-Díaz, Juan, and Juan F. Rubio-Ramírez. 2018. <span>“Narrative Sign 
 <div id="ref-rba2023statistics" class="csl-entry" role="listitem">
 Australia, Reserve Bank of. 2023. <span>“Statistics Tables.”</span> url = <span>https://www.rba.gov.au/statistics/tables</span>.
 </div>
+<div id="ref-blagrave2018crossborder" class="csl-entry" role="listitem">
+Blagrave, Patrick, Giang Ho, Ksenia Koloskova, and Esteban Rodrigo Vesperoni. 2018. <span>“Cross-Border Transmission of Fiscal Shocks: The Role of Monetary Conditions.”</span> <em>IMF Working Paper</em>, no. 18/103 (May). <a href="https://ssrn.com/abstract=3221122">https://ssrn.com/abstract=3221122</a>.
+</div>
 <div id="ref-jorgensen2022inflation" class="csl-entry" role="listitem">
 Jørgensen, Peter L., and Søren H. Ravn. 2022. <span>“The Inflation Response to Government Spending Shocks: A Fiscal Price Puzzle?”</span> <em>European Economic Review</em> 141: 103982. <a href="https://doi.org/10.1016/j.euroecorev.2021.103982">https://doi.org/10.1016/j.euroecorev.2021.103982</a>.
+</div>
+<div id="ref-laurie2008perspective" class="csl-entry" role="listitem">
+Laurie, Kirsty, and Jason McDonald. 2008. <span>“A Perspective on Trends in Australian Government Spending.”</span> <a href="https://apo.org.au/node/1845">https://apo.org.au/node/1845</a>.
 </div>
 <div id="ref-FRED" class="csl-entry" role="listitem">
 St. Louis, Federal Reserve Bank of. Accessed: 5 April 2023. <span>“<span>FRED (Federal Reserve Economic Data)</span>.”</span> <a href="https://fred.stlouisfed.org/" class="uri">https://fred.stlouisfed.org/</a>.
