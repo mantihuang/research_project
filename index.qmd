@@ -1173,7 +1173,7 @@ axis(2, c(0, 50, 100), c("", "FEVD[au.rgdp]", ""))
 for (n in 1:N) {
   polygon(c(hh, (h + 1):1), c(fevd.au.rgdp[n, hh], fevd.au.rgdp[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
 }
-axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9]))[c(1, 3, 10)], c("Government spending shock", "", "au.mps"))
+axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9])))
 
 # Plotting fevd-au-p-k1
 plot(hh, fevd.realTWI[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
@@ -1182,7 +1182,7 @@ axis(2, c(0, 50, 100), c("", "FEVD[realTWI]", ""))
 for (n in 1:N) {
   polygon(c(hh, (h + 1):1), c(fevd.realTWI[n, hh], fevd.realTWI[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
 }
-axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9]))[c(3, 10)],)
+axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9])))
 ```
 The current analysis focuses on identifying one specific shock; however, it is important to consider that other potential shocks could also contribute to explaining the observed variance. Further analysis using FEVD (Forecast Error Variance Decomposition) can shed light on the impact of these alternative shocks. As can be seen from the plot, each shock contributes almost equally to the overall variation.
 
@@ -1191,14 +1191,17 @@ The current analysis focuses on identifying one specific shock; however, it is i
 According to the perspective provided by @laurie2008perspective, there are three distinct time periods that are widely recognized for government spending expansion. These periods are as follows:
 
 1. Whitlam Government, 1974-75: The analysis highlights the increased government spending during the Whitlam Government in 1974-75 as one of the significant periods of expansion.
+
 $\implies$
 Narrative Sign Restriction 1 : The government spending shock must take positive values in 1974.
  
 2. Recessions in 1982-83: The paper identifies the recessions in 1982-83 as another period characterized by increased government spending.
+
 $\implies$
 Narrative Sign Restriction 2 : The government spending shock must take positive values in 1982.
 
 3. Recessions in 1990-91: The perspective also emphasizes the increased government spending that occurred following the recessions in 1990-91.
+
 $\implies$
 Narrative Sign Restriction 3 : The government spending shock must take positive values in 1990.
 
@@ -1298,6 +1301,57 @@ for (n in 1:N){
   abline(h=0)
   lines(hh, IRFs.k1[n,hh],lwd=2,col=mcxs1)
 }
+```
+
+```{r}
+# Plots of FEVD of Australian rgdp and p
+
+############################################################
+
+hh <- 1:(h + 1)
+fevd.au.rgdp <- apply(FEVD.posterior[2,,,], 1:2, mean)
+fevd.au.rgdp <- rbind(rep(0, h + 1), apply(fevd.au.rgdp, 2, cumsum))
+
+fevd.realTWI <- apply(FEVD.posterior[3,,,], 1:2, mean)
+fevd.realTWI <- rbind(rep(0, h + 1), apply(fevd.realTWI, 2, cumsum))
+
+fevd.exports <- apply(FEVD.posterior[5,,,], 1:2, mean)
+fevd.exports <- rbind(rep(0, h + 1), apply(fevd.realTWI, 2, cumsum))
+
+colors <- c("deepskyblue1","deepskyblue2","deepskyblue","deepskyblue3","deepskyblue4","dodgerblue",
+            "maroon1","maroon","maroon2","magenta","maroon3","maroon4")
+
+
+
+# Set up the layout for two plots side by side
+ par(mfrow = c(1, 2), mar = rep(4, 4), cex.axis = 1, cex.lab = 0.8)
+
+# Plotting fevd-au-gdp-k1
+
+plot(hh, fevd.au.rgdp[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
+# Define labels vector for x-axis (axis 1)
+x_axis_labels <- rep("", length(hh))  # Start with a vector of empty strings of the same length as 'hh'
+x_axis_labels[c(2, 5, 9)] <- c("1 quarter", "1 year", "2 years")  # Place your labels at desired positions
+
+# Replace the labels in your axis() calls with the revised labels vector
+axis(1, hh, x_axis_labels)
+
+# axis(1, hh, c("", "1 quarter", "", "", "1 year", "", "", "", "2 years"))
+axis(2, c(0, 50, 100), c("", "FEVD[au.rgdp]", ""))
+for (n in 1:N) {
+  polygon(c(hh, (h + 1):1), c(fevd.au.rgdp[n, hh], fevd.au.rgdp[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
+}
+# axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9]))[c(1, 3, 10)], c("Government spending shock", "", "au.mps"))
+axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9])))
+# Plotting fevd-au-p-k1
+plot(hh, fevd.realTWI[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
+axis(1, hh, x_axis_labels)
+axis(2, c(0, 50, 100), c("", "FEVD[realTWI]", ""))
+for (n in 1:N) {
+  polygon(c(hh, (h + 1):1), c(fevd.realTWI[n, hh], fevd.realTWI[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
+}
+# axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9]))[c(3, 10)],)
+axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9])))
 ```
 The key distinction lies in the fact that following the shock, the real exchange rate demonstrates a persistent appreciation and ongoing upward trend. Additionally, the initial response of imports and exports undergoes a noticeable alteration. Based on the provided narrative information, it is feasible to provide a more precise identification of the government spending shock given the information.
 
