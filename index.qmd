@@ -1,5 +1,5 @@
 ---
-title: "Research Proposal"
+title: "Structural Vector Autoregressions (SVARs) Application: the effects of unanticipated government spending shocks on Australian economy"
 author: "Manting Huang"
 
 execute:
@@ -16,21 +16,16 @@ bibliography: references.bib
 
 
 
-# 1. The question objective, and motivation
+# Research motivation and objectives 
 
-## Objective
-The research project aims to model the effect of government spending shocks on output, real exchange rate and consumption
+Most economies have experienced significant shocks due to the pandemic of the COVID-19,resulting in a marked increase in the government net debt-to-GDP ratios. For instance, the Australian's general government net debt-to-GDP ratio surged from 24.5\% in 2019 to 38.1\% in 2021, according to [@abs2021government], and the United States's ratio rises from 106.1\% to 121.1\% for the same periods by [@fed2023federal]. 
 
-## Research question 
-How does the unanticipated government spending shock influence output, real exchange rate and consumption in the short run and in the long run?
+There has been considerable researches on the consequences of government spending shocks on output, consumption, and other crucial macroeconomic factors. Economic theory suggests that positive shocks result in increased output and consumption. However, there has been less emphasis on the economy's external sector, including real exchange rates, imports, and exports. By employing the Structural Vector Autoregressions (SVARs) model to identify government spending shocks and investigating their connection with these variables, policymakers can enhance the formulation and execution of fiscal and monetary policies in response to unanticipated government spending shocks.
 
-## Motivation
-Most economies have experienced significant shocks due to Covid Pandemic,resulting in a marked increase in government net debt-to-GDP ratios.  For instance,Australian's general government net debt-to-GDP ratio surged from 24.5\% in 2019 to 38.1 in 2021\%  by [@abs2021government], while the United States's ratio rose from 106.1\% to 121.1\% by [@fed2023federal]. 
+The research project aims to model the effect of government spending shocks on output, real exchange rate and consumption; and answering the question how the unanticipated government spending shocks influence output, real exchange rate and consumption in the short run and long run. 
 
 
-There has been considerable research on the consequences of government spending shocks on output, consumption, and other crucial macroeconomic factors. Economic theory suggests that positive shocks result in increased output and consumption. However, there has been less emphasis on the economy's external sector, including real exchange rates, imports, and exports. By employing the SVARs model to identify government spending shocks and investigating their connection with these variables, policymakers can enhance the formulation and execution of fiscal and monetary policies in response to unanticipated government spending shocks.
-
-# 2. Data and their properties
+# Data and data properties
 
 ## Data 
 
@@ -53,11 +48,8 @@ library(xts)
 library(GIGrvg)
 ```
 
-
-
-## Variables
-
 ### Consumption
+
 The dataset contains information on household final consumption expenditure, which is measured in millions of dollars and recorded quarterly, with adjustments for seasonal variations. The plot, however, reveals that the data is non-stationary, with the mean value changing over time. This is a common characteristic of macroeconomic variables. As a result, I also look at the consumption growth data instead, which measures the year-ended household consumption growth and displays a decline in 2020 due to the COVID-19 pandemic. The mean value of consumption growth is 3.41%, indicating that the growth rate fluctuates around this value and is stationary over time.
 
 In the model, the original consumption variable is log-transformed to reduce the scale and conform to the assumption of normality.
@@ -129,10 +121,6 @@ df$gov_spend <- as.numeric(gov_spend)
 df <- na.omit(df)
 df$Date <- as.vector(index(df))
 
-
-
-
-
 # transformed in log terms
 log_df <- log(df)
 log_df$Date <- as.vector(index(log_df))
@@ -144,7 +132,6 @@ growth_df$Date <- as.vector(index(growth_df))
 
 # set date for 
 ```
-
 
 
 ```{r}
@@ -170,7 +157,6 @@ plot <- plot_grid(plot1, plot2,  ncol = 1, align = "v")
 print(plot)
 
 ```
-
 
 ### GDP
 
@@ -205,8 +191,6 @@ print(plot)
 
 The real exchange rate data is sourced from the Reserve Bank of Australia (RBA) and is provided on a quarterly basis. RBA uses the Australian dollar trade-weighted index as a measure of the real exchange rate. This index represents the price of the Australian dollar in terms of a group of foreign currencies, based on their share of trade with Australia.
 ```{r }
-
-
 # TWI 
 
 plot5<- ggplot(data = df, aes(x = Date, y =realTWI)) +
@@ -221,21 +205,13 @@ plot5<- ggplot(data = df, aes(x = Date, y =realTWI)) +
 print(plot5)
 ```
 
-
-
-
-
-
 Additionally, I also investigate the nominal exchange rate variable. I download the AUD/USD exchange rate, as the US dollar is widely accepted as an international currency. (Note: The data obtained using the package may not exactly match the description on the website.) However, since the nominal exchange rate may be influenced by various factors and due to data availability constraints, this research will focus exclusively on the real interest rate (TWI).
 
-
-
-### Exports and Imports
+### Exports and imports
 As this research aims to identify the government spending shock, exports and imports are also included. The data is season-adjusted. Trade balance is calculated as the difference between exports and imports.
 
 
 ```{r}
-
 plot6<- ggplot(data = log_df, aes(x = Date)) +
   geom_line(aes(y = exports-imports), color = "steelblue", size = 0.8) +
   #geom_line(aes(y = imports), color = "firebrick", size = 0.8) +
@@ -247,14 +223,9 @@ plot6<- ggplot(data = log_df, aes(x = Date)) +
         legend.position = "none")
 
 print(plot6)
-
 ```
 
-
-
-
-
-### government spending data
+### Government spending data
 I will keep the log transformation of the original variable.
 ```{r}
 plot7<- ggplot(data = log_df, aes(x = Date, y =gov_spend)) +
@@ -280,7 +251,7 @@ print(gov_plot)
 
 ```
     
-I also run the ADF test for this variable, and with a p-value of 0.5, we cannot reject the null hypothesis, indicating that the government spending data is expected to be non-stationary. For completeness, I also plot the ACF (autocorrelation function) and PACF (partial autocorrelation function). As shown in the ACF, there is a slow and gradual decay, suggesting that an autoregressive process might be suitable for the data. The PACF results also support using an AR model because the plot has a sharp cut-off.
+I also run the ADF test for this variable, and with a p-value of 0.05, we cannot reject the null hypothesis, indicating that the government spending data is expected to be non-stationary. For completeness, I also plot the ACF (autocorrelation function) and PACF (partial autocorrelation function). As shown in the ACF, there is a slow and gradual decay, suggesting that an autoregressive process might be suitable for the data. The PACF results also support using an AR model because the plot has a sharp cut-off.
 
 ```{r}
 # adf.test(gov_spending_australia$log_gov)
@@ -289,7 +260,7 @@ I also run the ADF test for this variable, and with a p-value of 0.5, we cannot 
 ```
 
 
-## preliminary Data Analysis
+## Preliminary data analysis
 
 In this section, I will present a table of the ADF test results for the remaining variables for completeness. As stated in the previous section, I will retain the log transformation of the original variable in my research. Additionally, the PACF and ACF tests suggest using an autoregression model.
 
@@ -304,36 +275,18 @@ library(xts)
 # Convert the 'xts' object to a 'data.frame'
 df_data_frame <- as.data.frame(df)[, -which(colnames(df) == "Date")]
 
-
-
-# Perform the ADF test on each variable and extract the test statistic and p-value
-
-# this procedure below is nicely coded! But using 1 lag for all the variables is not good. Better too high a lag number than too small. Stationarity of the TWI is most likely only the effect of too few lags used.
 adf_summary <- map_df(df_data_frame , function(x) {
-  adf_test <- ur.df(x, type = "none", lags = 1)
-  adf_test_summary <- summary(adf_test)
-  tibble(
-    Test_statistic = adf_test_summary@teststat[1, 1],
-    Critical_value= adf_test_summary@cval[1, 1]
-  )
+  adf <- adf.test(x, k = 4)
+  tibble(p_value = round(adf$p.value,2))
 }, .id = "Variable")
 
-# Perform the test for the first differences to determine the integration order and report in one table please
-
-
-
-
-# Add variable names to the summary table
-adf_summary$Variable <- colnames(df_data_frame )
-
-# Display the ADF test summary table
+adf_summary$Variable <- colnames(df_data_frame)
 knitr::kable(adf_summary, digits = 3)
-
 ```
 
 As anticipated, macroeconomic data is typically non-stationary. The only exception in this case is the real exchange rate, which is stationary.
 
-### PACF and ACF test
+### ACF and PACF plots
 
 ```{r}
 nrow <- 3
@@ -364,14 +317,13 @@ for (i in seq_along(df_data_frame )) {
 
 
 ```
-# 3. The model 
-
-
+# Models 
 
 ## Model Specification 
 
 ### Structural Form (SF)
 The structural model is specified as follows:
+
 $$\begin{align}
 B_0y_t &= b_0 + B_1 y_{t-1} + \dots + B_p y_{t-p} + u_t\\
 u_{t}| Y_{t-1} &\sim _{iid} ( 0, I_N)
@@ -388,7 +340,8 @@ y_t &= \mu_0 + A_1 y_{t-1} + \dots + A_p y_{t-p} + \varepsilon_t\\
 
 Where:
 
-$$y_t=\begin{pmatrix}  govspend_t &= \text{government spending}
+$$y_t=\begin{pmatrix}  
+govspend_t &= \text{government spending}
 \\ consump_t  &= \text{consumption}
 \\ realGDP_t  &= \text{real GDP}
 \\ TWI_t  &= \text{real exchange rate (trade-weighted index)}
@@ -403,7 +356,7 @@ $\varepsilon_t$ is a vector of the structural shocks at time t.
 Assumptions regarding the model's error terms:
 $\varepsilon_t |Y_{t-1}  \sim iid(0_N, Σ)$
 
-## Impusle response function and Forecast error variance decomposition
+## Impusle response function and forecast error variance decomposition
 
 The research project aims to model the effect of government spending shocks on output, real exchange rate, and consumption. The SVAR model specified above captures the dynamic relationships among the endogenous variables. To answer the research questions, I will use the SVAR model to estimate the impulse response functions (IRFs) and forecast error variance decomposition (FEVDs) for each endogenous variable. With IRFs, I will be able to observe the dynamic response of each variable, while the FEVDs will quantify the portions of the forecast error variance of each variable attributable to the shocks this paper aims to identify.
 
@@ -412,11 +365,11 @@ The research project aims to model the effect of government spending shocks on o
 I would expect the IRF for government spending to initially increase in response to the government spending shock and then decrease to the steady state. Consumption and GDP will also increase, but on a smaller scale compared to government spending. I am uncertain about the real exchange rate. Data shows that the real exchange rate will increase upon the shock and continue to rise after the shock.
 
 
-# 4. Modelling Framework
+# Modelling Framework
 
 ## Basic Model
 First, I re-write the RF of the model as the following matrix notation:
-$$\begin{align*}  Y = XA + E \\ \text{where} E|X \sim MN_{T \times N}(0_{T \times N},\Sigma,I_T)  \end{align*}$$
+$$\begin{align*}  Y = XA + E \\ \text{where} \ E|X \sim MN_{T \times N}(0_{T \times N},\Sigma,I_T)  \end{align*}$$
 
 Let $ L(A, \Sigma | Y, X)$ be the likelihood function given by:
 
@@ -628,6 +581,7 @@ Posterior <- function(Y, X, p, N, S,kappa.1) {
 
 ```
 The sign restriction algorithm is based on lecture algorithm 2. For current project, it only restricts the impulse response function at time 0.
+
 ```{r ,echo=TRUE}
 ### Impose sign restrictions based on Algorithm 2
 # SignRestrictions <- function(sign.restrictions,N,S,p,A.posterior,B.posterior,B1.posterior,Sigma.posterior){
@@ -696,6 +650,9 @@ for (s in 1:S){
                B.draws  = B.draws, # For empirical part
                i        = i))
 }
+```
+
+```{r ,echo=FALSE}
 # ```
 # 
 # 
@@ -759,7 +716,7 @@ for (s in 1:S){
 # }
 ```
 
-```{r}
+```{r ,echo=FALSE}
 # Posterios for basic model
 #####################################################
 # 
@@ -839,8 +796,10 @@ Gibbs Sampler :
 Initialize $\kappa_A$ at $\kappa_A^{(0)}$: 
 
 At each iteration s:
-1. Draw $(A,\Sigma)^{(s)} \sim p(A,\Sigma|Y,X, \kappa_A^{s-1}$
-2. Draw $\kappa_A^{s} \sim p(\kappa_A |Y,X,A,\Sigma)$
+
+1. Draw $(A,\Sigma)^{(s)} \sim p(A,\Sigma|Y,X, \kappa_A^{(s-1)})$.
+
+2. Draw $\kappa_A^{(s)} \sim p(\kappa_A |Y,X,A^{(s)},\Sigma^{(s)})$.
 
 Repeat step 1 and 2 for S1+S2 times and then discard the first S1. 
 
@@ -914,6 +873,9 @@ Posterior_kappaA <- function(Y, X, p, N, S1,S2, kappa.1) {
               kappaA = kappaA[(S1+1):(S1+S2)]))
   
 }
+```
+
+```{r ,echo=FALSE}
 # Posterior_kappaA <- function(Y, X, p, N, S, kappa.1) {
 #   # MLE
 #   ############################################################
@@ -978,7 +940,6 @@ Posterior_kappaA <- function(Y, X, p, N, S1,S2, kappa.1) {
 #   return(list(A.posterior = A.posterior, B.posterior = B.posterior, Sigma.posterior = Sigma.posterior,B1.posterior = B1.posterior,kappaA = kappaA))
 #   
 # }
-
 ```
 
 ## Extended model
@@ -1101,9 +1062,10 @@ for (i in 1:p) {
   X <- cbind(X, y[(p + 1 - i):(n_obs - i), ])
 }
 plot(y)
-
-
 ```
+
+
+
 ### Basic Model
 I first test my sign Restriction function with the simulated data. The sign restriction here is both positive. 
 
@@ -1112,12 +1074,6 @@ I first test my sign Restriction function with the simulated data. The sign rest
 The A and $\Sigma$ is presented below, suggesting the basic model is working.
 
 The first row of A is close to zero, implying a zero constant and the matrix is close to identity matrix.
-
-
-
-
-
-
 
 
 ```{r, echo=TRUE}
@@ -1497,6 +1453,7 @@ axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9])))
 The current analysis focuses on identifying one specific shock; however, it is important to consider that other potential shocks could also contribute to explaining the observed variance. Further analysis using FEVD (Forecast Error Variance Decomposition) can shed light on the impact of these alternative shocks. As can be seen from the plot, each shock contributes almost equally to the overall variation.
 
 ## Hyperparamter extention 
+
 ```{r}
 
 Posterior_kappa = Posterior_kappaA(Y, X, p, N, S1=200 ,S2=800 ,kappa.1)
@@ -1529,8 +1486,6 @@ Narrative Sign Restriction 3 : The government spending shock must take positive 
 After year 2008, 
 
 Current session places three additional restrictions on the government spending shock.
-
-
 
 
 ```{r}
