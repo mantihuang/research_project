@@ -418,7 +418,7 @@ I would expect the IRF for government spending to initially increase in response
 First, I re-write the RF of the model as the following matrix notation:
 $$\begin{align*}  Y = XA + E \\ \text{where} E|X \sim MN_{T \times N}(0_{T \times N},\Sigma,I_T)  \end{align*}$$
 
-Let $ L(A, \Sigma | Y, X)$ be the likelihood function given by:
+Let $L(A, \Sigma | Y, X)$ be the likelihood function given by:
 
 
 $$
@@ -485,11 +485,11 @@ $$
 $$
 
 $$
-\underline{V} = \text{diag}([\kappa_2 \quad \kappa_1 (p^{-2} \otimes I_N)])
+\underline{V} = \text{diag}([\kappa_2 \quad \kappa_1 (p^{-2} \otimes \imath_N)])
 $$
 
 $$
-p = [1,2,...,p]
+p = [1,2,...,p], \qquad \imath_N = [1,...,1]
 $$
 
 
@@ -627,7 +627,7 @@ Posterior <- function(Y, X, p, N, S,kappa.1) {
 
 
 ```
-The sign restriction algorithm is based on lecture algorithm 2. For current project, it only restricts the impulse response function at time 0.
+The sign restriction algorithm is based on @rubio2010structural. For current project, it only restricts the impulse response function at time 0.
 ```{r ,echo=TRUE}
 ### Impose sign restrictions based on Algorithm 2
 # SignRestrictions <- function(sign.restrictions,N,S,p,A.posterior,B.posterior,B1.posterior,Sigma.posterior){
@@ -803,7 +803,7 @@ Now assume that
 $$A|\Sigma \sim MN_{K \times N} (\underline{A}, \Sigma , \underline{\kappa}_A \underline{V}) $$
 where : 
 
-$$\kappa_A \sim G(\underline{s}_A,\frac{1}{2})$$.
+$$\kappa_A \sim G\left(\underline{s}_A,\frac{1}{2}\right)$$.
 
 Then the posterior of $\kappa_A$ is calculated as follows:
 
@@ -839,6 +839,7 @@ Gibbs Sampler :
 Initialize $\kappa_A$ at $\kappa_A^{(0)}$: 
 
 At each iteration s:
+
 1. Draw $(A,\Sigma)^{(s)} \sim p(A,\Sigma|Y,X, \kappa_A^{s-1}$
 2. Draw $\kappa_A^{s} \sim p(\kappa_A |Y,X,A,\Sigma)$
 
