@@ -1,5 +1,5 @@
 ---
-title: "Research Proposal"
+title: "Research Project"
 author: "Manting Huang"
 
 execute:
@@ -19,7 +19,7 @@ bibliography: references.bib
 # 1. The question objective, and motivation
 
 ## Objective
-The research project aims to model the effect of government spending shocks on output, real exchange rate and consumption
+The research project aims to model the effect of government spending shocks on output, real exchange rate and consumption.
 
 ## Research question 
 How does the unanticipated government spending shock influence output, real exchange rate and consumption in the short run and in the long run?
@@ -38,7 +38,7 @@ For this study, quarterly data will be utilized for estimation purposes, as it i
 
 Initially, I will load the packages that enable direct data downloads from the Reserve Bank of Australia [@rba2023statistics] and the Federal Reserve Bank of St. Louis [@FRED].
 
-```{r, echo=TRUE}
+```{r}
 library(readabs)
 library(readrba)
 library(tseries)
@@ -51,6 +51,10 @@ library(fredr)
 library(urca)
 library(xts)
 library(GIGrvg)
+library(mvtnorm)
+library(mgcv)
+library(ggplot2)
+library(gridExtra)
 ```
 
 
@@ -90,15 +94,19 @@ exports <- to.quarterly(xts(exports.dl$value, consumption.dl$date), OHLC = FALSE
 
 # Inflation
 CPI.dl <- read_abs(series_id = "A2325846C")
-CPI <- to.quarterly(xts(CPI.dl[45:(nrow(CPI.dl)-1),]$value, consumption.dl$date), OHLC = FALSE)
+# CPI <- to.quarterly(xts(CPI.dl[45:(nrow(CPI.dl)-1),]$value, consumption.dl$date), OHLC = FALSE)
+CPI <- to.quarterly(xts(CPI.dl[45:(nrow(CPI.dl)),]$value, consumption.dl$date), OHLC = FALSE)
 
 CPI_inflation.dl <- read_rba(series_id = "GCPIAGQP")
-CPI_inflation <- to.quarterly(xts(CPI_inflation.dl[149:(nrow(CPI_inflation.dl)-1),]$value, consumption.dl$date), OHLC = FALSE)
+# CPI_inflation <- to.quarterly(xts(CPI_inflation.dl[149:(nrow(CPI_inflation.dl)-1),]$value, consumption.dl$date), OHLC = FALSE)
+CPI_inflation <- to.quarterly(xts(CPI_inflation.dl[149:(nrow(CPI_inflation.dl)),]$value, consumption.dl$date), OHLC = FALSE)
 
 # real exchange rate (TWI)
 realTWI.dl   <- read_rba(series_id = "FRERTWI")
-realTWI <- to.quarterly(xts(realTWI.dl[-nrow(realTWI.dl),]$value,consumption.dl[44:nrow(consumption.dl),]$date), OHLC = FALSE) 
-#realTWI <- to.quarterly(xts(realTWI.dl$value,CPI.dl[88:nrow(CPI.dl),]$date), OHLC = FALSE)
+# realTWI <- to.quarterly(xts(realTWI.dl[-nrow(realTWI.dl),]$value,consumption.dl[44:nrow(consumption.dl),]$date), OHLC = FALSE) 
+
+realTWI <- to.quarterly(xts(realTWI.dl$value,consumption.dl[44:nrow(consumption.dl),]$date), OHLC = FALSE) 
+
 
 #realTWI <- to.quarterly(xts(realTWI.dl$value,exports.dl$date), OHLC = FALSE)
 
@@ -106,7 +114,7 @@ realTWI <- to.quarterly(xts(realTWI.dl[-nrow(realTWI.dl),]$value,consumption.dl[
 M3.dl   <- read_rba(series_id = "DMAM3N")
 M3 <- to.quarterly(xts(M3.dl$value, M3.dl$date), 
                          OHLC = FALSE)
-M3 <- head(M3, -1)
+# M3 <- head(M3, -1)
 
 # Government spending, seasonally adjusted
 pubcons.dl <- read_abs(series_id = "A2304036K")
@@ -570,6 +578,8 @@ $$
 Based on the derivation, the posterior function is 
 
 ```{r, echo=TRUE}
+#| code-fold: true
+#| code-summary: "Show code"
 
 ## Function for drawing posterior distribution , based on lec 12
 kappa.1 = 1
@@ -580,10 +590,6 @@ Posterior <- function(Y, X, p, N, S,kappa.1) {
   A.hat       = solve(t(X)%*%X)%*%t(X)%*%Y
   Sigma.hat   = t(Y-X%*%A.hat)%*%(Y-X%*%A.hat)/nrow(Y)
   # round(A.hat,3)
-  # round(Sigma.hat,3)
-  # round(cov2cor(Sigma.hat),3)
-  
-  # prior distribution
   ############################################################
   kappa.1     = kappa.1
   # kappa.2     = 100
@@ -629,8 +635,8 @@ Posterior <- function(Y, X, p, N, S,kappa.1) {
 ```
 The sign restriction algorithm is based on @rubio2010structural. For current project, it only restricts the impulse response function at time 0.
 ```{r ,echo=TRUE}
-### Impose sign restrictions based on Algorithm 2
-# SignRestrictions <- function(sign.restrictions,N,S,p,A.posterior,B.posterior,B1.posterior,Sigma.posterior){
+#| code-fold: true
+#| code-summary: "Show code"
 
 SignRestrictions <- function(sign.restrictions,posterior){
   # posterior -   a list - estimation outcome from function Posterior
@@ -696,107 +702,10 @@ for (s in 1:S){
                B.draws  = B.draws, # For empirical part
                i        = i))
 }
-# ```
-# 
-# 
-# ```{r}
-# SignRestrictions <- function(sign.restrictions,posterior){
-#   # posterior -   a list - estimation outcome from function Posterior
-#   
-#   
-#   A.posterior   = posterior$A.posterior
-#   B.posterior = posterior$B.posterior
-#   B1.posterior = posterior$B1.posterior
-#   Sigma.posterior = posterior$Sigma.posterior
-#   
-#   S = dim(A.posterior)[3]
-#   N = dim(B.posterior)[1]
-#   p = (dim(B1.posterior)[2]-1)/N
-#    
-#   
-#   R1            = diag(sign.restrictions)
-#   B0.draws      = array(NA,c(N,N,S))
-#   B1.draws      = array(NA,c(N,(1+N*p),S))
-#   pb = txtProgressBar(min = 0, max = S, initial = 0)
-#   
-# for (s in 1:S){
-#   
-#   setTxtProgressBar(pb, s)
-#   
-#   B0.tilde <-B.posterior[,,s]
-#   B1.tilde <-  B1.posterior[,,s]
-#   A <- A.posterior[,,s]
-#   Sigma <- Sigma.posterior[,,s]
-#   
-#   sign.restrictions.do.not.hold = TRUE
-# 
-#   i=1
-#   
-#   while (sign.restrictions.do.not.hold){
-#     X           = matrix(rnorm(N*N),N,N)
-#     QR          = qr(X, tol = 1e-10)
-#     Q           = qr.Q(QR,complete=TRUE)
-#     R           = qr.R(QR,complete=TRUE)
-#     Q           = t(Q %*% diag(sign(diag(R))))
-#     B0          = Q%*%B0.tilde 
-#     B0.inv      = solve(B0) 
-#     # check       = prod(R1 %*% B0.inv %*% diag(N)[,1] > 0) # Check reponse at time 0
-#     check       = prod(R1 %*% B0.inv %*% diag(N)[,1] >= 0)
-#     
-#     
-#     if (check==1){sign.restrictions.do.not.hold=FALSE}
-#     i=i+1
-#   }
-#   B1            = Q%*%B1.tilde 
-#   B0.draws[,,s] = B0
-#   B1.draws[,,s] = B1
-# 
-# }
-# 
-#   return (list(B0.draws = B0.draws,
-#                B1.draws = B1.draws,
-#                i        = i))
-# }
-```
-
-```{r}
-# Posterios for basic model
-#####################################################
-# 
-# p = 4 # time lagt0  
-# N = 8
-# S = 100
-# 
-# # Create Y and X
-# y = ts(df[, !names(df) %in% c("Date","nomGDP")])
-# Y = y[5:211,]
-# X       = matrix(1,nrow(Y),1)
-# for (i in 1:p){
-#   X     = cbind(X,y[5:211-i,])
-# }
-# results <- Posterior(Y, X, p, N, S)
-# 
-# 
-# # Sign.restriction######## 
-# ############################################################
-# set.seed(123456)
-# sign.restrictions <- c(1,1,1,1,1,1,1,1)
-# 
-# 
-# ################### Apply Sign Restriction ########################
-# 
-# Basic.Restriction = SignRestrictions(sign.restrictions,results)
-# 
-# B0.draws = Basic.Restriction$B0.draws
-# B1.draws = Basic.Restriction$B1.draws
-# 
-# 
-# ###############################################
-# 
-# 
-
 
 ```
+
+
 
 ## Hyperparamter extention
 Now assume that 
@@ -845,17 +754,17 @@ At each iteration s:
 
 Repeat step 1 and 2 for S1+S2 times and then discard the first S1. 
 
-```{r}
+```{r,echo=TRUE}
+#| code-fold: true
+#| code-summary: "Show code"
+
 kappa.1 = 1
 Posterior_kappaA <- function(Y, X, p, N, S1,S2, kappa.1) {
   # MLE
   ############################################################
   A.hat       = solve(t(X)%*%X)%*%t(X)%*%Y
   Sigma.hat   = t(Y-X%*%A.hat)%*%(Y-X%*%A.hat)/nrow(Y)
-  # round(A.hat,3)
-  # round(Sigma.hat,3)
-  # round(cov2cor(Sigma.hat),3)
-  
+
   
   kappaA           <- c()
   
@@ -915,74 +824,11 @@ Posterior_kappaA <- function(Y, X, p, N, S1,S2, kappa.1) {
               kappaA = kappaA[(S1+1):(S1+S2)]))
   
 }
-# Posterior_kappaA <- function(Y, X, p, N, S, kappa.1) {
-#   # MLE
-#   ############################################################
-#   A.hat       = solve(t(X)%*%X)%*%t(X)%*%Y
-#   Sigma.hat   = t(Y-X%*%A.hat)%*%(Y-X%*%A.hat)/nrow(Y)
-#   # round(A.hat,3)
-#   # round(Sigma.hat,3)
-#   # round(cov2cor(Sigma.hat),3)
-#   
-#   
-#   kappaA           <- c()
-#   
-#   # prior distribution
-#   ############################################################
-#   # Initialize kappa_A
-#   kappaA[1] = 1
-#   kappas = 0.1
-#   kappani = 1/2
-#   
-#   kappa.1     = kappa.1
-#   # kappa.2     = 100
-#   kappa.2     = 100
-#   kappa.3     = 1
-#   A.prior     = matrix(0,nrow(A.hat),ncol(A.hat))
-#   A.prior[2:(N+1),] = kappa.3*diag(N)
-#   V.prior     = diag(c(kappa.2,kappa.1*((1:p)^(-2))%x%rep(1,N)))
-#   S.prior     = diag(diag(Sigma.hat))
-#   nu.prior    = N+1
-#   
-#   # normal-inverse Wishard posterior parameters
-#   ############################################################
-#   V.bar.inv   = t(X)%*%X + diag(1/diag(V.prior))
-#   V.bar       = solve(V.bar.inv)
-#   A.bar       = kappaA*(V.bar%*%(t(X)%*%Y + diag(1/diag(V.prior))%*%A.prior))
-#   nu.bar      = nrow(Y) + nu.prior
-#   S.bar       = S.prior + t(Y)%*%Y + t(A.prior)%*%diag(1/diag(V.prior))%*%A.prior - t(A.bar)%*%V.bar.inv%*%A.bar
-#   S.bar.inv   = solve(S.bar)
-#   
-#   # posterior draws 
-#   ############################################################
-#   Sigma.posterior   = rWishart(S, df=nu.bar, Sigma=S.bar.inv)
-#   Sigma.posterior   = apply(Sigma.posterior,3,solve)
-#   Sigma.posterior   = array(Sigma.posterior,c(N,N,S))
-#   A.posterior       = array(rnorm(prod(c(dim(A.bar),S))),c(dim(A.bar),S))
-#   B.posterior       = array(NA,c(N,N,S))
-#   L                 = t(chol(V.bar))
-#   B1.posterior = array(NA,c(N,(1+N*p),S))
-#   
-#   for (s in 1:S){
-#     cholSigma.s     = chol(Sigma.posterior[,,s])
-#     B.posterior[,,s]= t(cholSigma.s)
-#     A.posterior[,,s]= A.bar + L%*%A.posterior[,,s]%*%cholSigma.s
-#     B1.posterior[,,s] =  B.posterior[,,s]%*%t(A.posterior[,,s])
-#     # draw kappa_A
-#     lambda = 1/2 - p*N/2
-#     chi = sum(diag(solve(Sigma.posterior[,,s]) %*% t(A.posterior[,,s] - A.prior) %*% solve(V.prior) %*% (A.posterior[,,s] - A.prior)))
-#     psi = 2/kappas
-#     kappaA[s] = GIGrvg::rgig(n=1,lambda,chi,psi)
-#     
-#   }
-#   
-#   return(list(A.posterior = A.posterior, B.posterior = B.posterior, Sigma.posterior = Sigma.posterior,B1.posterior = B1.posterior,kappaA = kappaA))
-#   
-# }
+
 
 ```
 
-## Extended model
+## Narrative Sign Restriction extention
 The extended model adopts the narrative sign restriction in (@antolin-diaz2018narrative). In this extension, the focus is on imposing restrictions on the signs of the Structural Shocks. The concept revolves around constraining the sign of specific structural shocks during a particular time period, guided by the narrative information.
 
 The posterior distribution is the same as the basic model. The difference is on the sign restriction. Based on the original sign restriction, the structural shocks for each period can be calculated by:
@@ -994,6 +840,9 @@ Then we could put the restrictions on the sign of $u_t$.
 
 
 ```{r, echo=TRUE}
+#| code-fold: true
+#| code-summary: "Show code"
+
 NarrativeSignRestrictions <- function(sign.restrictions,posterior,narrative.restrictions,Y,X){
   # posterior -   a list - estimation outcome from function Posterior
   
@@ -1067,11 +916,218 @@ NarrativeSignRestrictions <- function(sign.restrictions,posterior,narrative.rest
 }
 
 ```
+## Stochastic Volatility 
+
+This section takes heteroskedasticity into consideration, specifically Stochastic Volatility conditional heteroskedasticity. Current methods adopts @omori2007stochastic, which proposes to proximate the log chi-squared distribution with
+one degree of freedom by a mixture of ten normal distributions.
+$$
+Y = XA + E
+$$
+$$
+E|X \sim N_T(0_T,diag(\sigma^2))
+$$
+
+$$
+\sigma^2 = (exp\{h_1\}, ... , exp\{h_t\})
+$$
+$h_t$ - follows a Stochastic Volatility process
+
+
+The full conditional posterior distribution for $\alpha,\Sigma$ is given by
+$$
+P(A,\Sigma|Y,X,h) = MN (\bar{\alpha},\bar{V},\bar{S},\bar{\nu})
+$$
+
+where
+$$
+\bar{V}=(X'diag(h)^{-1}X+\underline{V}^{-1})^{-1}
+$$
+
+$$
+\bar{\alpha}=\bar{V}(X'diag(h)^{-1}Y+\underline{V}^{-1}\underline{\alpha})
+$$
+
+$$
+\bar{S}=\underline{V}+Y'diag(h)^{-1}Y+\underline{\alpha'}\underline{V}^{-1}\underline{\alpha}-\bar{\alpha'}\bar{V}^{-1}\bar{\alpha}
+$$
+
+$$
+\bar{\nu}= T + \underline{\nu}
+$$
+
+Gibbs Sampler :
+At each iteration s,
+
+Step 1. Sample $h^{S}$ from the distribution $P(h|Y,X,A, \Sigma)$
+Step 2. Sample $\alpha^{S},\Sigma^{s}$ from the $P(A,\Sigma|Y,X,h) = MN (\bar{\alpha},\bar{V},\bar{S},\bar{\nu})$
+
+
+```{r,echo=TRUE}
+#| code-fold: true
+#| code-summary: "Show code"
+SVcommon.Gibbs.iteration = function(S,Y,X, priors){
+  
+  # priors is a list containing:
+  #   h0.v - a positive scalar
+  #   h0.m - a scalar
+  #   sigmav.s - a positive scalar
+  #   sigmav.nu - a positive scalar
+  #   HH - a TxT matrix
+  T             = dim(Y)[1]
+  N             = dim(Y)[2]
+  K             = dim(X)[2] 
+  
+aux     = list(
+  Y           = Y,
+  X           = X,
+  H           = matrix(1,T,1),
+    h0          = 0,
+  sigma.v2      = 1,
+  s           = matrix(1,T,1),
+  A          = matrix(0, K, N),
+  Sigma      = matrix(0, K, N),
+  sigma2    = matrix(1,T,1)
+)
+  
+  
+  posteriors      = list(
+    H           = matrix(NA,T,S),
+    sigma2      = matrix(NA,T,S),
+    s           = matrix(NA,T,S),
+    h0          = rep(NA,S),
+    sigma.v2    = rep(NA,S),
+    A           = array(NA, c(K,N,S)),
+    Sigma       = array(NA, c(N,N,S))
+  )
+  
+
+  
+
+
+  
+    # Sampling A and Sigma
+  kappa.1     = 1
+  kappa.2     = 100
+  kappa.3     = 1
+  A.hat       = solve(t(X)%*%X)%*%t(X)%*%Y
+  Sigma.hat   = t(Y-X%*%A.hat)%*%(Y-X%*%A.hat)/nrow(Y)
+
+  # Prior distribution specification - Minnesota prior 
+
+  A.prior     = matrix(0,nrow(A.hat),ncol(A.hat))
+  A.prior[2:(N + 1), ] = diag(N)
+
+  S.prior     = diag(diag(Sigma.hat))
+  V.prior     = diag(c(kappa.2,kappa.1*((1:p)^(-2))%x%rep(1,N)))
+  
+  nu.prior    = 8
+  
+
+    
+  #####
+  alpha.st      = c(1.92677,1.34744,0.73504,0.02266,0-0.85173,-1.97278,-3.46788,-5.55246,-8.68384,-14.65000)
+  sigma.st      = c(0.11265,0.17788,0.26768,0.40611,0.62699,0.98583,1.57469,2.54498,4.16591,7.33342)
+  pi.st         = c(0.00609,0.04775,0.13057,0.20674,0.22715,0.18842,0.12047,0.05591,0.01575,0.00115)
+  
+for (s in 1:S){
+  # normal-inverse Wishard posterior parameters
+  
+  V.bar.inv   = t(aux$X)%*%diag(1/as.vector(aux$sigma2))%*%aux$X + diag(1/diag(V.prior))
+  V.bar       = solve(V.bar.inv)
+  A.bar       = V.bar%*%(t(aux$X)%*%diag(1/as.vector(aux$sigma2))%*%aux$Y + diag(1/diag(V.prior))%*%A.prior)
+  nu.bar      = nrow(aux$Y) + nu.prior
+  S.bar       = S.prior + t(aux$Y)%*%diag(1/as.vector(aux$sigma2))%*%aux$Y +   t(A.prior)%*%diag(1/diag(V.prior))%*%A.prior - t(A.bar)%*%V.bar.inv%*%A.bar
+  S.bar.inv   = solve(S.bar)
+  
+  # posterior draws 
+  ############################################################
+
+  Sigma.posterior.IW     = rWishart(1, df=nu.bar, Sigma=S.bar.inv)
+  Sigma.posterior.draw   = apply(Sigma.posterior.IW, 3 ,solve)
+  aux$Sigma              = array(Sigma.posterior.draw,c(N,N,1))
+  A.norm                 = array(rnorm(prod(c(K,N,1))),c(K,N,1))
+  L                      = t(chol(V.bar))
+  aux$A                  = A.bar + L%*%A.norm[,,1]%*%chol(aux$Sigma[,,1])
+
+  
+
+  # Lambda        = solve(chol(S.prior))
+  Lambda        = solve(chol(aux$Sigma[,,1]))
+  Z             = rowSums( ( aux$Y - aux$X %*% aux$A ) %*% Lambda ) / sqrt(N)
+  Y.tilde       = as.vector(log((Z + 0.0000001)^2))
+  Ytilde.alpha  = as.matrix(Y.tilde - alpha.st[as.vector(aux$s)])
+  
+  # sampling initial condition
+  ############################################################
+  V.h0.bar      = 1/((1 / priors$h0.v) + (1 / aux$sigma.v2))
+  m.h0.bar      = V.h0.bar*((priors$h0.m / priors$h0.v) + (aux$H[1] / aux$sigma.v2))
+  h0.draw       = rnorm(1, mean = m.h0.bar, sd = sqrt(V.h0.bar))
+  aux$h0        = h0.draw
+  
+  # sampling sigma.v2
+  ############################################################
+  sigma.v2.s    = priors$sigmav.s + sum(c(aux$H[1] - aux$h0, diff(aux$H))^2)
+  sigma.v2.draw = sigma.v2.s / rchisq(1, priors$sigmav.nu + T)
+  aux$sigma.v2  = sigma.v2.draw
+  
+  # sampling auxiliary states
+  ############################################################
+  Pr.tmp        = simplify2array(lapply(1:10,function(x){
+    dnorm(Y.tilde, mean = as.vector(aux$H + alpha.st[x]), sd = sqrt(sigma.st[x]), log = TRUE) + log(pi.st[x])
+  }))
+  Pr            = t(apply(Pr.tmp, 1, function(x){exp(x - max(x)) / sum(exp(x - max(x)))}))
+  s.cum         = t(apply(Pr, 1, cumsum))
+  r             = matrix(rep(runif(T), 10), ncol = 10)
+  ss            = apply(s.cum < r, 1, sum) + 1
+  aux$s         = as.matrix(ss)
+  
+  
+  # sampling log-volatilities using functions for tridiagonal precision matrix
+  ############################################################
+  Sigma.s.inv   = diag(1 / sigma.st[as.vector(aux$s)])
+  D.inv         = Sigma.s.inv + (1 / aux$sigma.v2) * priors$HH
+  b             = as.matrix(Ytilde.alpha / sigma.st[as.vector(aux$s)] + (aux$h0/aux$sigma.v2)*diag(T)[,1])
+  lead.diag     = diag(D.inv)
+  sub.diag      = mgcv::sdiag(D.inv, -1)
+  D.chol        = mgcv::trichol(ld = lead.diag, sd = sub.diag)
+  D.L           = diag(D.chol$ld)
+  mgcv::sdiag(D.L,-1) = D.chol$sd
+  x             = as.matrix(rnorm(T))
+  a             = forwardsolve(D.L, b)
+  draw          = backsolve(t(D.L), a + x)
+  aux$H         = as.matrix(draw)
+  aux$sigma2    = as.matrix(exp(draw))
+  
+
+
+  
+
+
+
+      posteriors$H[,s]             = aux$H
+      posteriors$sigma2[,s]        = aux$sigma2
+      posteriors$s[,s]             = aux$s
+      posteriors$h0[s]             = aux$h0
+      posteriors$sigma.v2[s]       = aux$sigma.v2
+      posteriors$A[,,s]            = aux$A
+      posteriors$Sigma[,,s]        = aux$Sigma
+      posteriors$A[,,s]            = aux$A
+      posteriors$Sigma[,,s]        = aux$Sigma
+  }
+
+  return(posteriors)
+}
+
+```
+
+
+
+
 
 ## Simulations 
 This section aims to evaluate the code by generating artificial data consisting of 1000 observations simulated from a bivariate Gaussian random walk process. The covariance matrix of the process is set to be the 2x2 identity matrix. 
 
-```{r}
+```{r, echo=FALSE}
 ### Proof that your model can replicate the true parameters of the data-generating process.
 
 
@@ -1115,13 +1171,7 @@ The A and $\Sigma$ is presented below, suggesting the basic model is working.
 The first row of A is close to zero, implying a zero constant and the matrix is close to identity matrix.
 
 
-
-
-
-
-
-
-```{r, echo=TRUE}
+```{r}
 posterior <- Posterior(Y, X, p, N, S,kappa.1)
 
 
@@ -1147,6 +1197,9 @@ for (s in 1:S){
 Acheck=round(apply(A.check,1:2,mean),4)
 Scheck =round(apply(S.check,1:2,mean),4)
 
+```
+
+```{r, echo=TRUE}
 Acheck
 Scheck
 ```
@@ -1170,6 +1223,8 @@ Kappa_A = posterior_k$kappaA
      lty = "blank")
 
 ```
+### Stochastiv Volatility
+
 
 ```{r}
 
@@ -1194,17 +1249,20 @@ for (s in 1:S2){
 Akappacheck=round(apply(A.check,1:2,mean),4)
 Skappacheck =round(apply(S.check,1:2,mean),4)
 
+```
+```{r,echo=TRUE}
+
 Akappacheck
 Skappacheck
 ```
-As can be seen from the results above, the hyperparamter extension also works.
+As can be seen from the results above, the hyperparameter extension also works.
 
 ### Narrative Sign Restriction
 For this section, I assume the the sign of the structural shocks for period period 65 to period 67 is negative, which is also consistent with the original sign restriction. The parameter values for A and $\sigma$ suggests the function is working well.
 
 
 
-```{r, echo=TRUE}
+```{r}
 ######## Narrative sign 
 narrative.restrictions = c(65:67)
 
@@ -1229,22 +1287,11 @@ for (s in 1:S){
 AN = round(apply(A.check,1:2,mean),4)
 SN = round(apply(S.check,1:2,mean),4)
 
+```
+```{r,echo=TRUE}
 AN
 SN
 ```
-
-```{r example}
-#narrative_restrictions <- matrix(NA, nrow = length(df$Date), ncol = 8)
-
-# Government Spending Shock
-#narrative_restrictions[c(50, 150), 1] <- 1  # Positive shock at episodes 50 and 150
-#narrative_restrictions[100, 1] <- -1        # Negative shock at episode 100
-
-# Apply NarrativeRestrictions function
-#test = NarrativeRestrictions(sign.restrictions, N, S, p, Basic_A.posterior, Basic_B.posterior, Basic_B1.posterior, Basic_Sigma.posterior, narrative_restrictions)
-```
-
-
 
 
 # 5. Empirical Estimation
@@ -1277,8 +1324,8 @@ Sign Restrictions are taken as the following:
 | Exports             | 0       |
 
 
+## Baseline Model
 
-## Impulse Response Function
 
 ```{r, echo=FALSE}
 library(HDInterval)
@@ -1290,19 +1337,6 @@ S = 1000
 
 # Create Y and X
 
-
-
-######### spending,consumption,realGDP as log form ##################
-# dff = df[, names(df) %in% c("consumption","gov_spend","realGDP","M3","CPI","imports","exports")]
-# dff = df[, names(df) %in% c("consumption","gov_spend","realGDP","M3","imports","exports")]
-# dff = log(dff)
-# # dff$realTWI = df$realTWI
-# dff$CPI = df$CPI
-# y = ts(dff)
-
-# y = ts(df[, !names(df) %in% c("Date","nomGDP","imports","exports")])
-
-# y = ts(df[, !names(df) %in% c("Date","nomGDP","realTWI")])
 y = ts(df[, !names(df) %in% c("Date","nomGDP")])
 y = log(y)
 
@@ -1315,39 +1349,54 @@ for (i in 1:p){
 }
 
 results = Posterior(Y,X,p,N,S,1)
-# Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,1,-1,1,-1,1,1), results)
-# Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,0,1,1,1,1,1), results)
 
-# Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), results)
 
 Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), results)
- # Narrative_Restriction = NarrativeSignRestrictions(sign.restrictions = c(1,1,1,-1,1,-1,1,1), results,c(16,50),Y,X)
+
 
 ##################### Results from the Sign_restriction ###################
 
 
 A.posterior = Sign_restritions$A.draws
 B.posterior = Sign_restritions$B.draws
+```
 
-# B0.draws = Narrative_Restriction$B0.draws
-# B1.draws = Narrative_Restriction$B1.draws
-
-##############################################
-#  A.posterior <- array(NA,c(N*p+1,N,S))
-# B.posterior       = array(NA,c(N,N,S))
-# # S.check <- array(NA,c(N,N,S))
-# 
-# for (s in 1:S){
-#   # A.posterior[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
-#   B.posterior[,,s] <- solve(B0.draws[,,s])
-# }
+The mean and standard deviations for matrix A are reported below:
+```{r}
 
 
+# Calculate the means
+A4check_mean <- head(round(apply(Sign_restritions$A.draws, 1:2, mean),4))
+# Calculate the standard deviations
+A4check_sd <- head(round(apply(Sign_restritions$A.draws, 1:2, sd),4))
+```
 
-############################### From the porsterior distribution#########
-# A.posterior = results$A.posterior
-# B.posterior = results$B.posterior
+```{r,echo=TRUE}
+A4check_mean 
+A4check_sd
+```
+The mean and standard deviations for matrix B are reported below:
+```{r}
+# Calculate the means
+B4check_mean <- head(round(apply(Sign_restritions$B.draws, 1:2, mean),4))
+B4check_sd   <- head(round(apply(Sign_restritions$B.draws, 1:2, sd),4))
+# Calculate the standard deviations
+```
+```{r,echo=TRUE}
+B4check_mean 
+B4check_sd
+```
+The third element of Y is realTWI and the eighth element of Y is government spending.
+```{r}
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+plot.ts(Sign_restritions$A.draws[3,,][8,], xlab = "Simulation times S", ylab = expression(A[38]), col = "#CC66CC")    
+hist(Sign_restritions$A.draws[3,,][8,], xlab = expression(A[38]), col = "#CC66CC", main = '')
+plot.ts(Sign_restritions$B.draws[3,,][8,], xlab = "Simulation times S", ylab = expression(B[38]), col = "lightblue")    
+hist(Sign_restritions$B.draws[3,,][8,], xlab = expression(A[38]), col = "lightblue", main = '')
 
+```
+
+```{r}
 
 ########https://www.sciencedirect.com/science/article/pii/S0014292121002634#####
 
@@ -1444,7 +1493,7 @@ Following the shock, both consumption and real GDP display persistence, meaning 
 
 In contrast, the Consumer Price Index (CPI), M3 (a measure of the money supply), and government spending experience an initial increase in response to the shock. However, these variables subsequently begin to decrease after the initial increase. This suggests that the initial surge in CPI, M3, and government spending eventually tapers off, resulting in a downward trend.
 
-## Forecast Varaince Decomposition
+
 
 ```{r}
 # Plots of FEVD of Australian rgdp and p
@@ -1501,9 +1550,170 @@ The current analysis focuses on identifying one specific shock; however, it is i
 ```{r}
 
 Posterior_kappa = Posterior_kappaA(Y, X, p, N, S1=200 ,S2=800 ,kappa.1)
+
+ 
 Sign_restritions_kappa = SignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), Posterior_kappa)
 
 
+```
+The hyperparameter analysis is utilized in this section, and it is evident from the IRFs and FEVD plot provided below that the outcomes closely resemble those of the baseline model.
+```{r}
+A.posterior = Sign_restritions_kappa$A.draws
+B.posterior = Sign_restritions_kappa$B.draws
+```
+
+
+
+The mean and standard deviations for matrix A are reported below:
+```{r}
+# Calculate the means
+Akappacheck_mean <- head(round(apply(A.posterior, 1:2, mean),4))
+
+# Calculate the standard deviations
+Akappacheck_sd <- head(round(apply(A.posterior, 1:2, sd),4))
+```
+```{r,echo=TRUE}
+Akappacheck_mean 
+Akappacheck_sd
+
+```
+The mean and standard deviations for matrix B are reported below:
+```{r}
+# Calculate the means
+Bkcheck_mean <- head(round(apply(B.posterior, 1:2, mean),4))
+Bkcheck_sd   <- head(round(apply(B.posterior, 1:2, sd),4))
+# Calculate the standard deviations
+```
+```{r,echo=TRUE}
+Bkcheck_mean 
+Bkcheck_sd
+```
+```{r}
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+plot.ts(A.posterior[3,,][8,], xlab = "Simulation times S", ylab = expression(A[38]), col = "#CC66CC")    
+hist(A.posterior[3,,][8,], xlab = expression(A[38]), col = "#CC66CC", main = '')
+plot.ts(B.posterior[3,,][8,], xlab = "Simulation times S", ylab = expression(B[38]), col = "lightblue")    
+hist(B.posterior[3,,][8,], xlab = expression(A[38]), col = "lightblue", main = '')
+
+```
+```{r}
+########https://www.sciencedirect.com/science/article/pii/S0014292121002634#####
+
+S = 800
+h = 20
+
+
+
+IRF.posterior     = array(NA,c(N,N,h+1,S))
+IRF.inf.posterior = array(NA,c(N,N,S))
+FEVD.posterior    = array(NA,c(N,N,h+1,S))
+J                 = cbind(diag(N),matrix(0,N,N*(p-1)))
+
+for (s in 1:S){
+  A.bold          = rbind(t(A.posterior[2:(1+N*p),,s]),cbind(diag(N*(p-1)),matrix(0,N*(p-1),N)))
+  IRF.inf.posterior[,,s]          = J %*% solve(diag(N*p)-A.bold) %*% t(J) %*% B.posterior[,,s]
+  
+  A.bold.power    = A.bold
+  for (i in 1:(h+1)){
+    if (i==1){
+      IRF.posterior[,,i,s]        = B.posterior[,,s]
+    } else {
+      IRF.posterior[,,i,s]        = J %*% A.bold.power %*% t(J) %*% B.posterior[,,s]
+      A.bold.power                = A.bold.power %*% A.bold
+    }
+    for (n in 1:N){
+      for (nn in 1:N){
+        FEVD.posterior[n,nn,i,s]  = sum(IRF.posterior[n,nn,1:i,s]^2)
+      }
+    }
+    FEVD.posterior[,,i,s]         = diag(1/apply(FEVD.posterior[,,i,s],1,sum))%*%FEVD.posterior[,,i,s]
+  }
+}
+FEVD.posterior    = 100*FEVD.posterior
+
+
+# save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k002.RData")
+save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k1_narrative.RData")
+
+load("irf-fevd-k1_narrative.RData")
+IRFs.k1           = apply(IRF.posterior[,1,,],1:2,mean) 
+
+######1st shock is government  spending shock
+
+IRFs.inf.k1       = apply(IRF.inf.posterior[,1,],1,mean)
+rownames(IRFs.k1) = colnames(Y)
+
+IRFs.k1.hdi    = apply(IRF.posterior[,1,,],1:2,hdi, credMass=0.68)
+hh          = 1:h+1
+
+
+par(mfrow=c(3,3), mar=c(4,4.5,2,2),cex.axis=1.5, cex.lab=1.5)
+  # par(mfrow=c(4,2), mar=c(3,3,2,2),cex.axis=1.5, cex.lab=1.5)
+for (n in 1:N){
+  ylims     = range(IRFs.k1[n,hh],IRFs.k1.hdi[,n,hh])
+  plot(hh,IRFs.k1[n,hh], type="l", ylim=ylims, axes=FALSE, xlab="", ylab=rownames(IRFs.k1)[n])
+  # if (n==N-1 | n==N){
+  #   axis(1,c(1,2,5,9),c("","1 quarter","1 year","2 years"))
+  # } else {
+  #   axis(1,c(1,2,5,9),c("","","",""))
+  # }
+    axis(1, at = c(12), labels = c("2.5year"))
+  axis(2,c(ylims[1],0,ylims[2]),round(c(ylims[1],0,ylims[2]),3))
+  polygon(c(hh,(h+1):1), c(IRFs.k1.hdi[1,n,hh],IRFs.k1.hdi[2,n,(h+1):1]), col=mcxs1.shade1,border=mcxs1.shade1)
+  abline(h=0)
+  lines(hh, IRFs.k1[n,hh],lwd=2,col=mcxs1)
+}
+```
+
+```{r}
+# Plots of FEVD of Australian rgdp and p
+
+############################################################
+
+hh <- 1:(h + 1)
+fevd.au.rgdp <- apply(FEVD.posterior[2,,,], 1:2, mean)
+fevd.au.rgdp <- rbind(rep(0, h + 1), apply(fevd.au.rgdp, 2, cumsum))
+
+fevd.realTWI <- apply(FEVD.posterior[3,,,], 1:2, mean)
+fevd.realTWI <- rbind(rep(0, h + 1), apply(fevd.realTWI, 2, cumsum))
+
+fevd.exports <- apply(FEVD.posterior[5,,,], 1:2, mean)
+fevd.exports <- rbind(rep(0, h + 1), apply(fevd.realTWI, 2, cumsum))
+# 
+# colors <- c("deepskyblue1","deepskyblue2","deepskyblue","deepskyblue3","deepskyblue4","dodgerblue",
+#             "maroon1","maroon","maroon2","magenta","maroon3","maroon4")
+
+
+
+# Set up the layout for two plots side by side
+ par(mfrow = c(1, 2), mar = rep(4, 4), cex.axis = 1, cex.lab = 0.8)
+
+# Plotting fevd-au-gdp-k1
+
+plot(hh, fevd.au.rgdp[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
+# Define labels vector for x-axis (axis 1)
+x_axis_labels <- rep("", length(hh))  # Start with a vector of empty strings of the same length as 'hh'
+x_axis_labels[c(2, 5, 9)] <- c("1 quarter", "1 year", "2 years")  # Place your labels at desired positions
+
+# Replace the labels in your axis() calls with the revised labels vector
+axis(1, hh, x_axis_labels)
+
+# axis(1, hh, c("", "1 quarter", "", "", "1 year", "", "", "", "2 years"))
+axis(2, c(0, 50, 100), c("", "FEVD[au.rgdp]", ""))
+for (n in 1:N) {
+  polygon(c(hh, (h + 1):1), c(fevd.au.rgdp[n, hh], fevd.au.rgdp[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
+}
+# axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9]))[c(1, 3, 10)], c("Government spending shock", "", "au.mps"))
+axis(4, (0.5 * (fevd.au.rgdp[1:n, 9] + fevd.au.rgdp[2:n+1, 9])))
+# Plotting fevd-au-p-k1
+plot(hh, fevd.realTWI[1,], type = "n", ylim = c(0, 100), axes = FALSE, xlab = "", ylab = "")
+axis(1, hh, x_axis_labels)
+axis(2, c(0, 50, 100), c("", "FEVD[realTWI]", ""))
+for (n in 1:N) {
+  polygon(c(hh, (h + 1):1), c(fevd.realTWI[n, hh], fevd.realTWI[n + 1, (h + 1):1]), col = colors[n], border = colors[n])
+}
+# axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9]))[c(3, 10)],)
+axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9])))
 ```
 
 
@@ -1527,39 +1737,70 @@ Narrative Sign Restriction 2 : The government spending shock must take positive 
 $\implies$
 Narrative Sign Restriction 3 : The government spending shock must take positive values in 1990.
 
-After year 2008, 
+Following the year 2008, there is no consensus regarding the direction of the government spending shock. Nonetheless, in response to the Global Financial Crisis, the Australian government implemented a stimulus package.
 
-Current session places three additional restrictions on the government spending shock.
+1. The Australian government made an announcement in October 2008 regarding a fiscal stimulus package called the Economic Security Strategy, which had a value of AUD 10.4 billion.
 
 
+2. In February 2009, as the global economy continued to decline, the government introduced a second stimulus package known as the Nation Building and Jobs Plan, amounting to AUD 42 billion.
 
+$\implies$
+Narrative Sign Restriction 4: The government spending shock should have positive values in the first quarter of 2009.
+
+Moreover, in response to Covid-19 pandemic, following three programs also had been implemented.
+
+1. JobKeeper Payment: This wage subsidy program was announced on March 30, 2020, and initially intended to run for six months. It was later extended twice and eventually ended on March 28, 2021.
+2. Cash Flow Boost: This measure was announced on March 22, 2020, as part of the government's second Economic Response Package. Eligible businesses received payments from late March 2020, and the program ran until June 2020.
+3. Coronavirus Supplement: This supplement was announced on March 22, 2020. It began on April 27, 2020, and originally planned to run until September 24, 2020, but was extended twice with a reduced amount. The supplement finally ended on March 31, 2021.
+
+$\implies$
+Narrative Sign Restriction 5: The government spending shock should have positive values in the first quarter of 2021.
 
 ```{r}
 
 results = Posterior(Y,X,p,N,S,1)
-Narrative_Restriction = NarrativeSignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), results,c(16,50,80),Y,X)
+Narrative_Restriction = NarrativeSignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), results,c(16,50,80,156,204),Y,X)
 S = 800
-# Narrative_Restriction = NarrativeSignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), Posterior_kappa,c(16,50,80),Y,X)
-# Sign_restritions = SignRestrictions(sign.restrictions = c(1,1,0,-1,1,1,1,1), results)
 
 
 ##############################################
 A.posterior = Narrative_Restriction$A.draws
 B.posterior = Narrative_Restriction$B.draws
-# S.check <- array(NA,c(N,N,S))
-# 
-# for (s in 1:S){
-#   # A.posterior[,,s] <- t(B1.draws[,,s]) %*% B0.draws[,,s]
-#   B.posterior[,,s] <- solve(B0.draws[,,s])
-# }
-# 
-# 
-# 
-# ############################### From the porsterior distribution#########
-# A.posterior = Posterior_kappa$A.posterior
-# # B.posterior = results$B.posterior
 
+```
+The mean and standard deviations for matrix A are reported below:
+```{r}
+# Calculate the means
+Ancheck_mean <- head(round(apply(A.posterior, 1:2, mean),4))
 
+# Calculate the standard deviations
+Ancheck_sd <- head(round(apply(A.posterior, 1:2, sd),4))
+```
+
+```{r,echo=TRUE}
+Ancheck_mean 
+Ancheck_sd
+
+```
+The mean and standard deviations for matrix B are reported below:
+```{r}
+# Calculate the means
+Bncheck_mean <- head(round(apply(B.posterior, 1:2, mean),4))
+Bncheck_sd   <- head(round(apply(B.posterior, 1:2, sd),4))
+# Calculate the standard deviations
+Bncheck_mean 
+Bncheck_sd
+```
+```{r}
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+plot.ts(A.posterior[3,,][8,], xlab = "Simulation times S", ylab = expression(A[38]), col = "#CC66CC")    
+hist(A.posterior[3,,][8,], xlab = expression(A[38]), col = "#CC66CC", main = '')
+plot.ts(B.posterior[3,,][8,], xlab = "Simulation times S", ylab = expression(B[38]), col = "lightblue")    
+hist(B.posterior[3,,][8,], xlab = expression(A[38]), col = "lightblue", main = '')
+
+```
+
+```{r}
 ########https://www.sciencedirect.com/science/article/pii/S0014292121002634#####
 
 
@@ -1678,18 +1919,165 @@ for (n in 1:N) {
 # axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9]))[c(3, 10)],)
 axis(4, (0.5 * (fevd.realTWI[1:n, 9] + fevd.realTWI[2:n+1, 9])))
 ```
-The key distinction lies in the fact that following the shock, the real exchange rate demonstrates a persistent appreciation and ongoing upward trend. Additionally, the initial response of imports and exports undergoes a noticeable alteration. Based on the provided narrative information, it is feasible to provide a more precise identification of the government spending shock given the information.
+The key distinction lies in the fact that following the shock, the real exchange rate demonstrates a persistent appreciation and ongoing upward trend. Additionally, the initial response of imports undergoes a noticeable alteration. Based on the provided narrative information, it is feasible to provide a more precise identification of the government spending shock given the information.
+
+## Stochstic Volatility
+This section enhance the narrative sign restriction model by incorporating the Stochastic Volatility conditional heteroskedasticity.
 
 
 
-Note:
+```{r}
 
-Please note the following issues encountered during the empirical estimation:
+T             = dim(Y)[1]
 
-1. Initially, I observed explosive Impulse Response Functions (IRF). However, I found that applying a logarithmic transformation to every variable greatly alleviates this problem.
 
-2. I fixed the problem of A posterior by putting the transformation from B0 and B1 to A inside the sign-restriction function.
+H         = diag(T)
+sdiag(H,-1) =  -1
 
+HH        = 2*diag(T)
+sdiag(HH,-1) =  -1
+sdiag(HH,1) =  -1
+
+priors        = list(
+  h0.v    = 1,
+  sigmav.s= 1,
+  sigmav.nu= 1,
+  h0.v    = 1,
+  h0.m    = 0 ,
+  HH      = HH
+)
+
+
+sv1 = SVcommon.Gibbs.iteration(S,Y,X,priors)
+
+
+  A.posterior= sv1$A
+  B.posterior       = array(NA,c(N,N,S))
+  B1.posterior = array(NA,c(N,(1+N*p),S))
+  for (s in 1:S){
+    cholSigma.s     = chol(sv1$Sigma[,,s])
+    B.posterior[,,s]= t(cholSigma.s)
+    B1.posterior[,,s] =  B.posterior[,,s]%*%t(A.posterior[,,s])
+  }
+  
+sv_posterior = list(A.posterior = A.posterior, B.posterior = B.posterior, Sigma.posterior = sv1$Sigma,B1.posterior = B1.posterior)
+
+SV_Narrative_Restriction = NarrativeSignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), sv_posterior,c(16,50,80,156,204),Y,X)
+A.posterior = SV_Narrative_Restriction$A.draws
+B.posterior = SV_Narrative_Restriction$B.draws
+
+```
+
+
+
+The mean and standard deviations for matrix A are reported below:
+```{r}
+# Calculate the means
+Ahcheck_mean <- head(round(apply(A.posterior, 1:2, mean),4))
+
+# Calculate the standard deviations
+Ahcheck_sd <- head(round(apply(A.posterior, 1:2, sd),4))
+```
+```{r,echo=TRUE}
+Ahcheck_mean 
+Ahcheck_sd
+
+```
+The mean and standard deviations for matrix B are reported below:
+```{r}
+# Calculate the means
+Bhcheck_mean <- head(round(apply(B.posterior, 1:2, mean),4))
+Bhcheck_sd   <- head(round(apply(B.posterior, 1:2, sd),4))
+# Calculate the standard deviations
+```
+```{r,echo=TRUE}
+Bhcheck_mean 
+Bhcheck_sd
+```
+As can be seen from the track plot, A converges fast. 
+```{r}
+
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+plot.ts(A.posterior[3,,][8,], xlab = "Simulation times S", ylab = expression(A[38]), col = "#CC66CC")    
+hist(A.posterior[3,,][8,], xlab = expression(A[38]), col = "#CC66CC", main = '')
+plot.ts(B.posterior[3,,][8,], xlab = "Simulation times S", ylab = expression(B[38]), col = "lightblue")    
+hist(B.posterior[3,,][8,], xlab = expression(A[38]), col = "lightblue", main = '')
+
+```
+
+
+
+```{r}
+h = 20
+
+
+IRF.posterior     = array(NA,c(N,N,h+1,S))
+IRF.inf.posterior = array(NA,c(N,N,S))
+FEVD.posterior    = array(NA,c(N,N,h+1,S))
+J                 = cbind(diag(N),matrix(0,N,N*(p-1)))
+
+for (s in 1:S){
+  A.bold          = rbind(t(A.posterior[2:(1+N*p),,s]),cbind(diag(N*(p-1)),matrix(0,N*(p-1),N)))
+  IRF.inf.posterior[,,s]          = J %*% solve(diag(N*p)-A.bold) %*% t(J) %*% B.posterior[,,s]
+  
+  A.bold.power    = A.bold
+  for (i in 1:(h+1)){
+    if (i==1){
+      IRF.posterior[,,i,s]        = B.posterior[,,s]
+    } else {
+      IRF.posterior[,,i,s]        = J %*% A.bold.power %*% t(J) %*% B.posterior[,,s]
+      A.bold.power                = A.bold.power %*% A.bold
+    }
+    for (n in 1:N){
+      for (nn in 1:N){
+        FEVD.posterior[n,nn,i,s]  = sum(IRF.posterior[n,nn,1:i,s]^2)
+      }
+    }
+    FEVD.posterior[,,i,s]         = diag(1/apply(FEVD.posterior[,,i,s],1,sum))%*%FEVD.posterior[,,i,s]
+  }
+}
+FEVD.posterior    = 100*FEVD.posterior
+
+
+# save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k002.RData")
+save(IRF.posterior,IRF.inf.posterior, FEVD.posterior, file="irf-fevd-k1_narrative.RData")
+
+load("irf-fevd-k1_narrative.RData")
+IRFs.k1           = apply(IRF.posterior[,1,,],1:2,mean) 
+
+######1st shock is government  spending shock
+
+IRFs.inf.k1       = apply(IRF.inf.posterior[,1,],1,mean)
+rownames(IRFs.k1) = colnames(Y)
+
+IRFs.k1.hdi    = apply(IRF.posterior[,1,,],1:2,hdi, credMass=0.68)
+hh          = 1:h+1
+
+
+par(mfrow=c(3,3), mar=c(4,4.5,2,2),cex.axis=1.5, cex.lab=1.5)
+  # par(mfrow=c(4,2), mar=c(3,3,2,2),cex.axis=1.5, cex.lab=1.5)
+for (n in 1:N){
+  ylims     = range(IRFs.k1[n,hh],IRFs.k1.hdi[,n,hh])
+  plot(hh,IRFs.k1[n,hh], type="l", ylim=ylims, axes=FALSE, xlab="", ylab=rownames(IRFs.k1)[n])
+  # if (n==N-1 | n==N){
+  #   axis(1,c(1,2,5,9),c("","1 quarter","1 year","2 years"))
+  # } else {
+  #   axis(1,c(1,2,5,9),c("","","",""))
+  # }
+    axis(1, at = c(12), labels = c("2.5year"))
+  axis(2,c(ylims[1],0,ylims[2]),round(c(ylims[1],0,ylims[2]),3))
+  polygon(c(hh,(h+1):1), c(IRFs.k1.hdi[1,n,hh],IRFs.k1.hdi[2,n,(h+1):1]), col=mcxs1.shade1,border=mcxs1.shade1)
+  abline(h=0)
+  lines(hh, IRFs.k1[n,hh],lwd=2,col=mcxs1)
+}
+
+```
+
+
+When we factor in heteroskedasticity, the impulse response function (IRF) experiences substantial alterations. Generally, the shocks to government spending tend to exhibit greater persistence compared to the model without heteroskedasticity. The potential reasons for this may encompass a more accurate representation of dynamic relationships. This improved model specification may suggest that the impact of a shock to government spending endures for a longer period (i.e., it's more persistent) than previously assumed without considering heteroskedasticity. Heteroskedasticity often indicates volatility clustering, where high volatility periods are commonly followed by more of the same, and similarly, low volatility leads to low volatility. If a significant (positive or negative) shock to government spending occurs during a period of high volatility, it might result in a succession of subsequent shocks, creating a perception of enhanced persistence.
+
+
+The influence of government spending shocks on imports and exports has been diametrically opposed. An escalation in government spending, depicted by a positive shock, results in a contraction of imports while simultaneously bolstering exports. This shock additionally elicits an upward movement in the Real Trade Weighted Index (TWI). Notably, in contrast to the prior model, imports do not revert to their level prior to the shock.
 ## References {.unnumbered}
 
 
