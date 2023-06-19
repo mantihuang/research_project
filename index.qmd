@@ -1963,8 +1963,8 @@ sv1 = SVcommon.Gibbs.iteration(S,Y,X,priors)
 sv_posterior = list(A.posterior = A.posterior, B.posterior = B.posterior, Sigma.posterior = sv1$Sigma,B1.posterior = B1.posterior)
 
 SV_Narrative_Restriction = NarrativeSignRestrictions(sign.restrictions = c(1,1,0,0,0,1,1,1), sv_posterior,c(16,50,80,156,204),Y,X)
-A.posterior = SV_Narrative_Restriction$A.draws
-B.posterior = SV_Narrative_Restriction$B.draws
+A.posterior = SV_Narrative_Restriction$A.draws[,,51:800]
+B.posterior = SV_Narrative_Restriction$B.draws[,,51:800]
 
 ```
 
@@ -1994,7 +1994,20 @@ Bhcheck_sd   <- head(round(apply(B.posterior, 1:2, sd),4))
 Bhcheck_mean 
 Bhcheck_sd
 ```
-As can be seen from the track plot, A converges fast. 
+The plot indicates that h reaches to its peak after covid.
+```{r}
+sv.mean = apply(sv1$H,1,mean)
+
+
+x.date <- index(df)
+x.date <- x.date[6:211]
+plot(x=x.date, y=sv.mean, type="l",col=mcxs1,lwd = 2, ylab = "h",xlab = "", main = "Conditional Volatility")
+
+abline(v=as.Date("2020-04-01"), col = "grey25", lty = "dotted", lwd = 1.25)
+text(x = as.Date("2019-04-01"), y = max(sv.mean), labels = "COVID", pos = 2)
+
+```
+
 ```{r}
 
 par(mfrow=c(2,2), mar=c(4,4,2,2))
@@ -2009,7 +2022,7 @@ hist(B.posterior[3,,][8,], xlab = expression(A[38]), col = "lightblue", main = '
 
 ```{r}
 h = 20
-
+S = 750
 
 IRF.posterior     = array(NA,c(N,N,h+1,S))
 IRF.inf.posterior = array(NA,c(N,N,S))
@@ -2074,10 +2087,7 @@ for (n in 1:N){
 ```
 
 
-When we factor in heteroskedasticity, the impulse response function (IRF) experiences substantial alterations. Generally, the shocks to government spending tend to exhibit greater persistence compared to the model without heteroskedasticity. The potential reasons for this may encompass a more accurate representation of dynamic relationships. This improved model specification may suggest that the impact of a shock to government spending endures for a longer period (i.e., it's more persistent) than previously assumed without considering heteroskedasticity. Heteroskedasticity often indicates volatility clustering, where high volatility periods are commonly followed by more of the same, and similarly, low volatility leads to low volatility. If a significant (positive or negative) shock to government spending occurs during a period of high volatility, it might result in a succession of subsequent shocks, creating a perception of enhanced persistence.
-
-
-The influence of government spending shocks on imports and exports has been diametrically opposed. An escalation in government spending, depicted by a positive shock, results in a contraction of imports while simultaneously bolstering exports. This shock additionally elicits an upward movement in the Real Trade Weighted Index (TWI). Notably, in contrast to the prior model, imports do not revert to their level prior to the shock.
+When we factor in heteroskedasticity, the impulse response function (IRF) experiences substantial alterations. Generally, the shocks to government spending tend to exhibit greater persistence compared to the model without heteroskedasticity. The influence of government spending shocks on imports and exports has been diametrically opposed. An escalation in government spending, depicted by a positive shock, results in a contraction of imports while simultaneously bolstering exports. This shock additionally elicits an upward movement in the Real Trade Weighted Index (TWI). Notably, in contrast to the prior model, imports do not revert to their level prior to the shock.
 ## References {.unnumbered}
 
 

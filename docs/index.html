@@ -1428,48 +1428,48 @@ P(A,\Sigma|Y,X,h) = MN (\bar{\alpha},\bar{V},\bar{S},\bar{\nu})
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>Ahcheck_mean </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>        [,1]    [,2]    [,3]    [,4]    [,5]    [,6]    [,7]    [,8]
-[1,]  0.0049  0.0054  0.0031  0.0194  0.0109  0.0091  0.0136  0.0109
-[2,]  1.0000  0.0001  0.0000  0.0015  0.0009  0.0008  0.0010  0.0015
-[3,]  0.0004  1.0001 -0.0002  0.0019  0.0012  0.0007  0.0010  0.0013
-[4,] -0.0003 -0.0005  0.9964  0.0029  0.0036  0.0014  0.0010  0.0017
-[5,]  0.0002  0.0001  0.0001  0.9985 -0.0004 -0.0004 -0.0002 -0.0002
-[6,] -0.0001  0.0002  0.0009 -0.0024  0.9965 -0.0004 -0.0002 -0.0009</code></pre>
+[1,]  0.0042  0.0041  0.0028  0.0202  0.0095  0.0092  0.0154  0.0124
+[2,]  1.0001  0.0001 -0.0004  0.0016  0.0009  0.0008  0.0010  0.0012
+[3,]  0.0003  1.0002 -0.0003  0.0018  0.0009  0.0007  0.0011  0.0013
+[4,] -0.0003 -0.0004  0.9971  0.0021  0.0030  0.0014  0.0008  0.0015
+[5,]  0.0002  0.0001  0.0006  0.9988 -0.0006 -0.0006 -0.0002 -0.0005
+[6,]  0.0000  0.0002  0.0011 -0.0026  0.9970 -0.0003 -0.0004 -0.0008</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>Ahcheck_sd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       [,1]   [,2]   [,3]   [,4]   [,5]   [,6]   [,7]   [,8]
-[1,] 0.0186 0.0153 0.0499 0.0635 0.0762 0.0130 0.0382 0.0348
-[2,] 0.0028 0.0014 0.0070 0.0057 0.0079 0.0011 0.0032 0.0045
-[3,] 0.0031 0.0013 0.0064 0.0065 0.0078 0.0013 0.0029 0.0036
-[4,] 0.0017 0.0017 0.0075 0.0083 0.0089 0.0012 0.0039 0.0039
-[5,] 0.0014 0.0015 0.0069 0.0062 0.0076 0.0019 0.0029 0.0044
-[6,] 0.0016 0.0014 0.0065 0.0071 0.0087 0.0015 0.0034 0.0033</code></pre>
+[1,] 0.0108 0.0099 0.0436 0.0463 0.0549 0.0096 0.0205 0.0264
+[2,] 0.0011 0.0010 0.0040 0.0045 0.0054 0.0009 0.0020 0.0024
+[3,] 0.0011 0.0010 0.0043 0.0045 0.0060 0.0009 0.0022 0.0025
+[4,] 0.0012 0.0012 0.0051 0.0054 0.0066 0.0011 0.0032 0.0030
+[5,] 0.0011 0.0010 0.0045 0.0045 0.0059 0.0009 0.0023 0.0027
+[6,] 0.0011 0.0011 0.0047 0.0048 0.0062 0.0011 0.0022 0.0026</code></pre>
 </div>
 </div>
 <p>The mean and standard deviations for matrix B are reported below:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>Bhcheck_mean </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>         [,1]     [,2]     [,3]     [,4]     [,5]    [,6]    [,7]    [,8]
-[1,] 229.8657 -14.5796   0.2528 -10.5765 -14.9704 -1.3501  4.6228  9.9591
-[2,] 280.2112  20.1836   7.1406   4.4116  -3.5040  0.8147 -0.7385 10.4389
-[3,]  56.6540  10.5685  -5.0123  -0.3977  -2.6794  4.6724 -4.3622 -1.8856
-[4,] -92.4295   4.4381  -2.6176  -4.4210   4.0638  2.3170 -2.3199 -1.2496
-[5,]  77.1181   1.8708  -3.1697  -3.9216  -1.4319  1.0800 -1.0029 -4.8058
-[6,] 318.2797  13.9347 -31.0775  -5.9766  11.2994 27.0356 18.2353 -2.6376</code></pre>
+<pre><code>         [,1]     [,2]     [,3]    [,4]     [,5]    [,6]    [,7]    [,8]
+[1,] 237.3576 -15.2854  -0.6667 -9.3979 -16.1448 -0.5021  3.9994 10.3742
+[2,] 286.8623  23.2325   2.9751  1.6940  -2.4499  2.5445 -0.7082 15.4269
+[3,]  57.8566  11.4292  -4.7985 -0.8663  -3.2454  4.2092 -3.2792 -2.5557
+[4,] -93.8868   3.9766  -1.9515 -5.6183   3.8132  1.1196 -1.2096 -1.6586
+[5,]  79.2617   1.8197  -2.4445 -3.9036  -2.6979  1.8118 -1.1215 -5.1101
+[6,] 326.2328  12.6989 -32.5172 -5.4088  13.1878 27.4896 18.4100 -4.8214</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>Bhcheck_sd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         [,1]     [,2]     [,3]     [,4]     [,5]     [,6]     [,7]     [,8]
-[1,] 176.5335 308.0268 310.7451 311.7239 317.8669 313.0964 304.9042 314.3340
-[2,] 206.6537 359.4216 355.9592 349.0558 375.1543 360.9545 369.4658 364.4378
-[3,]  90.1240 102.1558  95.8912 102.3541 100.5928 103.4482 100.2647 102.0114
-[4,]  88.8659 107.7345  98.2235 103.8690  99.8055 100.6435 101.7277  98.9773
-[5,]  73.4520 103.7714 100.5596  98.8972 101.4210 100.4859 103.2766 100.6810
-[6,] 234.6519 414.6463 439.0952 422.0045 423.1088 434.8670 424.4196 425.4021</code></pre>
+[1,] 176.5729 312.1886 312.9686 318.4307 323.1988 317.8797 310.0634 318.5414
+[2,] 206.6701 362.8626 360.1852 355.9518 379.9683 368.2873 373.0329 368.2440
+[3,]  91.5581 103.1108  97.5474 104.4693 102.4013 105.3362 102.3081 104.1287
+[4,]  90.2940 109.8390  99.7967 104.6748 101.5631 101.8050 103.3998 100.2832
+[5,]  74.2658 104.4535 101.7511 100.5965 101.6936 102.2920 104.8479 102.3803
+[6,] 236.5959 420.7772 448.3086 427.7389 429.1373 442.1347 430.7997 432.1060</code></pre>
 </div>
 </div>
-<p>As can be seen from the track plot, A converges fast.</p>
+<p>The plot indicates that h reaches to its peak after covid.</p>
 <div class="cell">
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-54-1.png" class="img-fluid" width="672"></p>
@@ -1480,8 +1480,12 @@ P(A,\Sigma|Y,X,h) = MN (\bar{\alpha},\bar{V},\bar{S},\bar{\nu})
 <p><img src="index_files/figure-html/unnamed-chunk-55-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>When we factor in heteroskedasticity, the impulse response function (IRF) experiences substantial alterations. Generally, the shocks to government spending tend to exhibit greater persistence compared to the model without heteroskedasticity. The potential reasons for this may encompass a more accurate representation of dynamic relationships. This improved model specification may suggest that the impact of a shock to government spending endures for a longer period (i.e., it’s more persistent) than previously assumed without considering heteroskedasticity. Heteroskedasticity often indicates volatility clustering, where high volatility periods are commonly followed by more of the same, and similarly, low volatility leads to low volatility. If a significant (positive or negative) shock to government spending occurs during a period of high volatility, it might result in a succession of subsequent shocks, creating a perception of enhanced persistence.</p>
-<p>The influence of government spending shocks on imports and exports has been diametrically opposed. An escalation in government spending, depicted by a positive shock, results in a contraction of imports while simultaneously bolstering exports. This shock additionally elicits an upward movement in the Real Trade Weighted Index (TWI). Notably, in contrast to the prior model, imports do not revert to their level prior to the shock. ## References {.unnumbered}</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-56-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>When we factor in heteroskedasticity, the impulse response function (IRF) experiences substantial alterations. Generally, the shocks to government spending tend to exhibit greater persistence compared to the model without heteroskedasticity. The influence of government spending shocks on imports and exports has been diametrically opposed. An escalation in government spending, depicted by a positive shock, results in a contraction of imports while simultaneously bolstering exports. This shock additionally elicits an upward movement in the Real Trade Weighted Index (TWI). Notably, in contrast to the prior model, imports do not revert to their level prior to the shock. ## References {.unnumbered}</p>
 
 
 
